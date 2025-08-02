@@ -70,4 +70,21 @@ export const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: '30d', // 30 days
   });
+};
+
+// Authorize middleware - check for specific roles/permissions
+export const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      res.status(401);
+      throw new Error('Not authorized, no user');
+    }
+
+    if (roles.length && !roles.includes(req.user.role)) {
+      res.status(403);
+      throw new Error('Not authorized to access this route');
+    }
+
+    next();
+  };
 }; 

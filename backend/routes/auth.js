@@ -40,6 +40,7 @@ const registerUser = asyncHandler(async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
         authProvider: user.authProvider,
         token: generateToken(user._id)
       }
@@ -93,6 +94,7 @@ const loginUser = asyncHandler(async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
+      role: user.role,
       authProvider: user.authProvider,
       token: generateToken(user._id)
     }
@@ -112,6 +114,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
         authProvider: user.authProvider,
         isActive: user.isActive,
         lastLogin: user.lastLogin,
@@ -147,6 +150,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
         _id: updatedUser._id,
         name: updatedUser.name,
         email: updatedUser.email,
+        role: updatedUser.role,
         authProvider: updatedUser.authProvider,
         token: generateToken(updatedUser._id)
       }
@@ -205,6 +209,7 @@ const googleAuth = asyncHandler(async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
+      role: user.role,
       authProvider: user.authProvider,
       token: generateToken(user._id)
     }
@@ -233,6 +238,7 @@ const getMe = asyncHandler(async (req, res) => {
       _id: req.user._id,
       name: req.user.name,
       email: req.user.email,
+      role: req.user.role,
       authProvider: req.user.authProvider,
       isActive: req.user.isActive,
       lastLogin: req.user.lastLogin

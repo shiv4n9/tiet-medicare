@@ -1,11 +1,23 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, LayoutDashboard, Stethoscope } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import MedicalInterfaceCard from './MedicalInterfaceCard';
 
 const Hero: React.FC = () => {
   const { theme } = useTheme();
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  
+  // Temporary debug log
+  console.log('Hero Component - User data:', {
+    isAuthenticated,
+    user,
+    userRole: user?.role,
+    shouldShowDashboard: isAuthenticated && user?.role === 'admin'
+  });
   
   useEffect(() => {
     const interval = setInterval(() => {
@@ -20,6 +32,10 @@ const Hero: React.FC = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  const handleDashboardClick = () => {
+    navigate('/admin');
+  };
 
   return (
     <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-white to-medical-blue-50 dark:from-gray-900 dark:to-gray-800 pt-20">
@@ -125,6 +141,34 @@ const Hero: React.FC = () => {
               >
                 Book Appointment
               </motion.a>
+              {isAuthenticated && user?.role === 'admin' && (
+                <motion.button 
+                  onClick={handleDashboardClick}
+                  className="btn-outline bg-medical-green-600 hover:bg-medical-green-700 text-white border-medical-green-600 hover:border-medical-green-700 dark:bg-medical-green-600 dark:hover:bg-medical-green-700 dark:border-medical-green-600 dark:hover:border-medical-green-700"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.8 }}
+                >
+                  <LayoutDashboard className="w-4 h-4 mr-2" />
+                  Dashboard
+                </motion.button>
+              )}
+              {isAuthenticated && user?.role === 'doctor' && (
+                <motion.button 
+                  onClick={() => navigate('/doctor')}
+                  className="btn-outline bg-medical-blue-600 hover:bg-medical-blue-700 text-white border-medical-blue-600 hover:border-medical-blue-700 dark:bg-medical-blue-600 dark:hover:bg-medical-blue-700 dark:border-medical-blue-600 dark:hover:border-medical-blue-700"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.8 }}
+                >
+                  <Stethoscope className="w-4 h-4 mr-2" />
+                  Doctor Dashboard
+                </motion.button>
+              )}
             </motion.div>
           </div>
           

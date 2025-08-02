@@ -52,6 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           _id: response.data._id,
           name: response.data.name,
           email: response.data.email,
+          role: response.data.role,
           authProvider: response.data.authProvider
         };
         
@@ -88,6 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           _id: response.data._id,
           name: response.data.name,
           email: response.data.email,
+          role: response.data.role,
           authProvider: response.data.authProvider
         };
         

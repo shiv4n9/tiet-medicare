@@ -65,6 +65,8 @@ export interface User {
   _id: string;
   name: string;
   email: string;
+  role?: string;
+  specialization?: string;
   authProvider?: 'email' | 'google';
   isActive?: boolean;
   lastLogin?: string;
@@ -78,6 +80,7 @@ export interface AuthResponse {
     _id: string;
     name: string;
     email: string;
+    role?: string;
     authProvider: 'email' | 'google';
     token: string;
   };

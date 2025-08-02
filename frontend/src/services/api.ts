@@ -201,6 +201,8 @@ export const patientService = {
   },
 };
 
+export { api };
+
 export default {
   appointmentService,
   patientService,

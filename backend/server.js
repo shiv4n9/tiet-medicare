@@ -6,6 +6,15 @@ import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import appointmentRoutes from './routes/appointments.js';
 import patientRoutes from './routes/patients.js';
 import authRoutes from './routes/auth.js';
+import doctorRoutes from './routes/doctor.js';
+import labRoutes from './routes/labRoutes.js';
+import noteRoutes from './routes/noteRoutes.js';
+import referralRoutes from './routes/referralRoutes.js';
+import doctorProfileRoutes from './routes/doctorProfileRoutes.js';
+import complianceRoutes from './routes/complianceRoutes.js';
+import auditRoutes from './routes/auditRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
+import adminRoutes from './routes/admin.js';
 import colors from 'colors';
 
 // Load environment variables
@@ -59,6 +68,15 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/patients', patientRoutes);
+app.use('/api/doctor', doctorRoutes);
+app.use('/api/doctor/notes', noteRoutes);
+app.use('/api/doctor/referrals', referralRoutes);
+app.use('/api/doctor/profile', doctorProfileRoutes);
+app.use('/api/lab', labRoutes);
+app.use('/api/compliance', complianceRoutes);
+app.use('/api/audit', auditRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

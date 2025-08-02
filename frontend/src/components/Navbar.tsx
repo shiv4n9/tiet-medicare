@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, LogIn, LogOut, User } from 'lucide-react';
+import { Menu, X, LogIn, LogOut, User, LayoutDashboard, Stethoscope } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -155,6 +155,30 @@ const Navbar: React.FC = () => {
                   <DropdownMenuItem className="flex items-center" onClick={() => navigate('/my-appointments')}>
                     <span>My Appointments</span>
                   </DropdownMenuItem>
+                  {user?.role === 'admin' && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        className="flex items-center text-medical-blue-600 dark:text-medical-blue-400 font-medium"
+                        onClick={() => navigate('/admin')}
+                      >
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        <span>Admin Dashboard</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {user?.role === 'doctor' && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        className="flex items-center text-medical-blue-600 dark:text-medical-blue-400 font-medium"
+                        onClick={() => navigate('/doctor')}
+                      >
+                        <Stethoscope className="mr-2 h-4 w-4" />
+                        <span>Doctor Dashboard</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     onClick={handleLogout}
@@ -204,9 +228,39 @@ const Navbar: React.FC = () => {
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/my-appointments')}>
                     <span>My Appointments</span>
                   </DropdownMenuItem>
+                  {user?.role === 'admin' && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        className="text-medical-blue-600 dark:text-medical-blue-400 font-medium"
+                        onClick={() => {
+                          navigate('/admin');
+                          setIsMenuOpen(false);
+                        }}
+                      >
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        <span>Admin Dashboard</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {user?.role === 'doctor' && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        className="text-medical-blue-600 dark:text-medical-blue-400 font-medium"
+                        onClick={() => {
+                          navigate('/doctor');
+                          setIsMenuOpen(false);
+                        }}
+                      >
+                        <Stethoscope className="mr-2 h-4 w-4" />
+                        <span>Doctor Dashboard</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     onClick={handleLogout}

@@ -11,6 +11,10 @@ import { ThemeProvider } from "./hooks/useTheme";
 import Test from "./pages/Test";
 import Profile from "./pages/Profile";
 import MyAppointments from "./pages/MyAppointments";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import DoctorDashboard from "./pages/DoctorDashboard";
+import AdminRoute from "./components/auth/AdminRoute";
+import DoctorRoute from "./components/auth/DoctorRoute";
 
 
 const queryClient = new QueryClient();
@@ -29,8 +33,28 @@ const App = () => (
               <Route path="/test" element={<Test />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/my-appointments" element={<MyAppointments />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               
+              {/* Admin Routes */}
+              <Route 
+                path="/admin" 
+                element={
+                  <AdminRoute>
+                    <AdminDashboard />
+                  </AdminRoute>
+                } 
+              />
+              
+              {/* Doctor Routes */}
+              <Route 
+                path="/doctor" 
+                element={
+                  <DoctorRoute>
+                    <DoctorDashboard />
+                  </DoctorRoute>
+                } 
+              />
+              
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
