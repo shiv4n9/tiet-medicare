@@ -3,6 +3,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
+import connectDB from './config/database.js';
 import appointmentRoutes from './routes/appointments.js';
 import patientRoutes from './routes/patients.js';
 import authRoutes from './routes/auth.js';
@@ -19,7 +20,6 @@ import colors from 'colors';
 
 // Load environment variables
 const PORT = process.env.PORT || 5000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/medicare';
 
 const app = express();
 
@@ -94,18 +94,6 @@ app.use(notFound);
 app.use(errorHandler);
 
 // Connect to MongoDB
-const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(MONGODB_URI);
-    console.log(colors.cyan(`MongoDB Connected: ${conn.connection.host}`));
-    return conn;
-  } catch (error) {
-    console.error(colors.red(`Error: ${error.message}`));
-    process.exit(1);
-  }
-};
-
-// Start server
 const startServer = async () => {
   try {
     await connectDB();

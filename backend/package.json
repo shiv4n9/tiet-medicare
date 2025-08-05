@@ -9,7 +9,11 @@
     "server": "nodemon server.js",
     "test": "node test-auth.js",
     "dev": "cross-env NODE_ENV=development nodemon server.js",
-    "prod": "cross-env NODE_ENV=production node server.js"
+    "prod": "cross-env NODE_ENV=production node server.js",
+    "setup:atlas": "node scripts/setup-atlas.js",
+    "migrate:test-atlas": "node scripts/migrate-to-atlas.js",
+    "export:local-data": "node scripts/export-local-data.js",
+    "check:database": "node check-database.js"
   },
   "keywords": [
     "healthcare",
