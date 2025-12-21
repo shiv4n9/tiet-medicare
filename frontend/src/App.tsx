@@ -12,9 +12,12 @@ import Test from "./pages/Test";
 import Profile from "./pages/Profile";
 import MyAppointments from "./pages/MyAppointments";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import DoctorDashboard from "./pages/DoctorDashboard";
+import DoctorDashboard from "./pages/DoctorDashboardSimplified";
+import PatientDashboard from "./pages/PatientDashboard";
 import AdminRoute from "./components/auth/AdminRoute";
 import DoctorRoute from "./components/auth/DoctorRoute";
+import PatientRoute from "./components/auth/PatientRoute";
+import QuickNavigation from "./components/QuickNavigation";
 
 
 const queryClient = new QueryClient();
@@ -54,9 +57,20 @@ const App = () => (
                 } 
               />
               
+              {/* Patient Routes */}
+              <Route 
+                path="/patient" 
+                element={
+                  <PatientRoute>
+                    <PatientDashboard />
+                  </PatientRoute>
+                } 
+              />
+              
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <QuickNavigation />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import BlurEffect from './BlurEffect';
 import { Calendar as CalendarIcon, Clock, User, Stethoscope, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -10,20 +10,22 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { toast } from 'sonner';
-import { 
-  saveAppointment, 
-  isSlotAvailable, 
-  AppointmentDetails 
+import {
+  saveAppointment,
+  isSlotAvailable,
+  AppointmentDetails
 } from '@/utils/appointmentStorage';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { doctorsService, Doctor } from '@/services/doctorsService';
 
 const AppointmentCard: React.FC = () => {
   const [activeStep, setActiveStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState<string>("10:30");
-  const [selectedDoctor, setSelectedDoctor] = useState<string>("Dr. Aisha Sharma");
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [selectedType, setSelectedType] = useState<string>("General Checkup");
+  const [availableDoctors, setAvailableDoctors] = useState<Doctor[]>([]);
   const [patientName, setPatientName] = useState<string>("");
   const [patientEmail, setPatientEmail] = useState<string>("");
   const [contactNumber, setContactNumber] = useState<string>("");
@@ -32,11 +34,34 @@ const AppointmentCard: React.FC = () => {
     '09:00', '10:30', '11:45', '14:00', '15:15', '16:30'
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDoctorsLoading, setIsDoctorsLoading] = useState(true);
   const { isAuthenticated, user: authUser } = useAuth();
   const navigate = useNavigate();
   const [showEmailPrompt, setShowEmailPrompt] = useState(false);
   const hasPrefilledEmail = useRef(false);
-  
+
+  // Fetch available doctors on component mount
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      setIsDoctorsLoading(true);
+      try {
+        const doctors = await doctorsService.getAvailableDoctors();
+        setAvailableDoctors(doctors);
+        // Set first doctor as default if available
+        if (doctors.length > 0) {
+          setSelectedDoctor(doctors[0]);
+        }
+      } catch (error) {
+        console.error('Error fetching doctors:', error);
+        toast.error('Failed to load available doctors');
+      } finally {
+        setIsDoctorsLoading(false);
+      }
+    };
+
+    fetchDoctors();
+  }, []);
+
   useEffect(() => {
     if (authUser?.email && !hasPrefilledEmail.current) {
       setPatientEmail(authUser.email);
@@ -51,19 +76,19 @@ const AppointmentCard: React.FC = () => {
       setShowEmailPrompt(false);
     }
   }, [authUser, patientEmail]);
-  
+
   useEffect(() => {
     if (selectedDate) {
       const allTimeSlots = ['09:00', '10:30', '11:45', '14:00', '15:15', '16:30'];
       const available = allTimeSlots.filter(time => isSlotAvailable(selectedDate, time));
       setAvailableTimeSlots(available);
-      
+
       if (available.length > 0 && !available.includes(selectedTime)) {
         setSelectedTime(available[0]);
       }
     }
   }, [selectedDate, selectedTime]);
-  
+
   const handleSubmit = async (e?: React.FormEvent) => {
     // Prevent default form submission if called from a form
     if (e) {
@@ -72,40 +97,43 @@ const AppointmentCard: React.FC = () => {
 
     try {
       setIsLoading(true);
-      
+
       if (!contactNumber) {
         toast.error('Please enter your contact number');
         return;
       }
-      
+
       const appointmentData = {
         name: patientName,
         email: patientEmail,
         contactNumber: contactNumber,
         date: selectedDate,
         time: selectedTime,
-        doctor: selectedDoctor,
+        doctor: selectedDoctor?.name || '',
+        doctorId: selectedDoctor?._id || '',
+        department: selectedDoctor?.department || selectedType,
+        specialization: selectedDoctor?.specialization || 'General Medicine',
         type: selectedType,
-        service: selectedType, 
+        service: selectedType,
         notes: notes,
         status: 'scheduled',
       };
 
       console.log('Submitting appointment:', appointmentData);
-      
+
       await saveAppointment(appointmentData);
-      
+
       // Reset form
       setSelectedDate(new Date());
       setSelectedTime('10:30');
-      setSelectedDoctor('Dr. Aisha Sharma');
+      setSelectedDoctor(availableDoctors.length > 0 ? availableDoctors[0] : null);
       setSelectedType('General Checkup');
       setPatientName('');
       setPatientEmail('');
       setContactNumber('');
       setNotes('');
       setActiveStep(1);
-      
+
       toast.success('Appointment booked successfully!');
     } catch (error) {
       console.error('Error saving appointment:', error);
@@ -128,7 +156,7 @@ const AppointmentCard: React.FC = () => {
         return;
       }
       setActiveStep(2);
-    } 
+    }
     // For the second step, validate doctor and appointment type
     else if (activeStep === 2) {
       if (!selectedDoctor || !selectedType) {
@@ -143,14 +171,14 @@ const AppointmentCard: React.FC = () => {
         toast.error('Please fill in your name, email and contact number');
         return;
       }
-      
+
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(patientEmail)) {
         toast.error('Please enter a valid email address');
         return;
       }
-      
+
       // If all validations pass, submit the form
       handleSubmit();
     }
@@ -174,17 +202,17 @@ const AppointmentCard: React.FC = () => {
                 Quick & Easy
               </span>
             </BlurEffect>
-            
+
             <BlurEffect delay={100}>
               <h2 className="section-title dark:text-white">Schedule Your Appointment</h2>
             </BlurEffect>
-            
+
             <BlurEffect delay={200}>
               <p className="section-subtitle dark:text-gray-300">
                 Our streamlined booking process makes it effortless to schedule appointments with campus medical professionals. Get the care you need, when you need it.
               </p>
             </BlurEffect>
-            
+
             <BlurEffect delay={300}>
               <div className="space-y-6 mt-8">
                 <div className="flex items-start">
@@ -198,7 +226,7 @@ const AppointmentCard: React.FC = () => {
                     <p className="text-gray-600 dark:text-gray-300">Choose from available slots that fit your schedule.</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <div className="flex-shrink-0 mt-1">
                     <div className="w-10 h-10 rounded-full bg-medical-blue-100 dark:bg-gray-900 flex items-center justify-center">
@@ -210,7 +238,7 @@ const AppointmentCard: React.FC = () => {
                     <p className="text-gray-600 dark:text-gray-300">Select from our qualified medical professionals based on your needs.</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <div className="flex-shrink-0 mt-1">
                     <div className="w-10 h-10 rounded-full bg-medical-blue-100 dark:bg-gray-900 flex items-center justify-center">
@@ -225,9 +253,9 @@ const AppointmentCard: React.FC = () => {
               </div>
             </BlurEffect>
           </div>
-          
+
           <BlurEffect delay={400}>
-            <motion.div 
+            <motion.div
               className="glass-effect rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -235,28 +263,68 @@ const AppointmentCard: React.FC = () => {
             >
               <form onSubmit={handleNextStep} className="relative">
                 <div className="px-6 py-8">
-                  <div className="flex items-center justify-between mb-8">
-                    <h3 className="text-xl font-bold dark:text-gray-200">Book Appointment</h3>
-                    <div className="absolute top-6 right-8 flex items-center gap-2">
-                      {[1, 2, 3].map((step) => (
-                        <button
-                          key={step}
-                          type="button"
-                          aria-label={`Go to step ${step}`}
-                          onClick={() => setActiveStep(step)}
-                          className={`w-3 h-3 rounded-full transition-all border-2 focus:outline-none focus:ring-2 focus:ring-blue-400
-                            ${activeStep === step
-                              ? 'bg-blue-500 border-blue-500'
-                              : 'bg-gray-400 border-gray-400 dark:bg-gray-700 dark:border-gray-700 hover:bg-blue-400 hover:border-blue-400'}
-                          `}
-                          style={{ cursor: 'pointer' }}
-                        />
+                  {/* Progress Bar */}
+                  <div className="mb-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-bold dark:text-gray-200">Book Appointment</h3>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">Step {activeStep} of 3</span>
+                    </div>
+                    
+                    {/* Visual Progress Steps */}
+                    <div className="flex items-center justify-between mb-2">
+                      {[
+                        { num: 1, label: 'Date & Time' },
+                        { num: 2, label: 'Doctor & Type' },
+                        { num: 3, label: 'Confirm' }
+                      ].map((step, index) => (
+                        <div key={step.num} className="flex items-center flex-1">
+                          <div className="flex flex-col items-center flex-1">
+                            <motion.button
+                              type="button"
+                              onClick={() => setActiveStep(step.num)}
+                              className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
+                                activeStep >= step.num
+                                  ? 'bg-gradient-to-r from-medical-blue-500 to-medical-green-500 text-white shadow-lg'
+                                  : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                              }`}
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.95 }}
+                              animate={activeStep === step.num ? { scale: [1, 1.1, 1] } : {}}
+                              transition={{ duration: 0.3 }}
+                            >
+                              {activeStep > step.num ? (
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              ) : (
+                                step.num
+                              )}
+                            </motion.button>
+                            <span className={`text-xs mt-2 font-medium ${
+                              activeStep >= step.num
+                                ? 'text-medical-blue-600 dark:text-medical-blue-400'
+                                : 'text-gray-500 dark:text-gray-400'
+                            }`}>
+                              {step.label}
+                            </span>
+                          </div>
+                          {index < 2 && (
+                            <div className="flex-1 h-1 mx-2 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
+                              <motion.div
+                                className="h-full bg-gradient-to-r from-medical-blue-500 to-medical-green-500"
+                                initial={{ width: '0%' }}
+                                animate={{ width: activeStep > step.num ? '100%' : '0%' }}
+                                transition={{ duration: 0.3 }}
+                              />
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
                   </div>
-                  
+
                   {activeStep === 1 && (
-                    <motion.div 
+                    <motion.div
                       className="space-y-6"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -291,14 +359,13 @@ const AppointmentCard: React.FC = () => {
                             availableTimeSlots.map((time24, i) => {
                               const displayTime = formatTimeForDisplay(time24);
                               return (
-                                <motion.button 
+                                <motion.button
                                   key={i}
                                   type="button"
-                                  className={`py-2 px-1 rounded-lg text-sm font-medium transition-colors ${
-                                    time24 === selectedTime 
-                                      ? 'bg-medical-blue-100 text-medical-blue-600 border-2 border-medical-blue-500 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-400' 
-                                      : 'bg-white border border-gray-200 text-gray-600 hover:bg-medical-blue-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-blue-900/40'
-                                  }`}
+                                  className={`py-2 px-1 rounded-lg text-sm font-medium transition-colors ${time24 === selectedTime
+                                    ? 'bg-medical-blue-100 text-medical-blue-600 border-2 border-medical-blue-500 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-400'
+                                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-medical-blue-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-blue-900/40'
+                                    }`}
                                   onClick={(e) => {
                                     e.preventDefault();
                                     setSelectedTime(time24);
@@ -319,9 +386,9 @@ const AppointmentCard: React.FC = () => {
                       </div>
                     </motion.div>
                   )}
-                  
+
                   {activeStep === 2 && (
-                    <motion.div 
+                    <motion.div
                       className="space-y-6"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -330,7 +397,7 @@ const AppointmentCard: React.FC = () => {
                       <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">Appointment Type</label>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <motion.button 
+                          <motion.button
                             type="button"
                             className={`p-4 ${selectedType === "General Checkup" ? 'bg-medical-blue-100 text-medical-blue-600 border-2 border-medical-blue-500 dark:bg-blue-700 dark:text-white dark:border-blue-400' : 'bg-white border border-gray-200 hover:bg-medical-blue-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-blue-900/40 dark:text-gray-200'} rounded-lg text-left transition-all`}
                             onClick={(e) => {
@@ -349,8 +416,8 @@ const AppointmentCard: React.FC = () => {
                               </div>
                             </div>
                           </motion.button>
-                          
-                          <motion.button 
+
+                          <motion.button
                             type="button"
                             className={`p-4 ${selectedType === "Specialist Consult" ? 'bg-medical-blue-100 text-medical-blue-600 border-2 border-medical-blue-500 dark:bg-blue-700 dark:text-white dark:border-blue-400' : 'bg-white border border-gray-200 hover:bg-medical-blue-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-blue-900/40 dark:text-gray-200'} rounded-lg text-left transition-all`}
                             onClick={(e) => {
@@ -383,42 +450,80 @@ const AppointmentCard: React.FC = () => {
                           </motion.button>
                         </div>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">Select Doctor</label>
                         <div className="space-y-2">
-                          {['Dr. Aisha Sharma', 'Dr. Rajiv Mehta'].map((doctor, i) => (
-                            <motion.button 
-                              key={i}
-                              type="button"
-                              className={`w-full p-3 flex items-center rounded-lg transition-all ${
-                                doctor === selectedDoctor 
-                                  ? 'bg-medical-blue-100 text-medical-blue-600 border-2 border-medical-blue-500 dark:bg-blue-700 dark:text-white dark:border-blue-400' 
+                          {isDoctorsLoading ? (
+                            <div className="flex items-center justify-center py-8">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-medical-blue-600"></div>
+                              <span className="ml-2 text-gray-600 dark:text-gray-400">Loading doctors...</span>
+                            </div>
+                          ) : availableDoctors.length > 0 ? (
+                            availableDoctors.map((doctor, i) => (
+                              <motion.button
+                                key={doctor._id}
+                                type="button"
+                                className={`w-full p-3 flex items-center rounded-lg transition-all ${doctor._id === selectedDoctor?._id
+                                  ? 'bg-medical-blue-100 text-medical-blue-600 border-2 border-medical-blue-500 dark:bg-blue-700 dark:text-white dark:border-blue-400'
                                   : 'bg-white border border-gray-200 hover:bg-medical-blue-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-blue-900/40 dark:text-gray-200'
-                              }`}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setSelectedDoctor(doctor);
-                              }}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${doctor === selectedDoctor ? 'bg-medical-blue-600 dark:bg-blue-500' : 'bg-white dark:bg-white'}`}>
-                                <User className={`h-5 w-5 ${doctor === selectedDoctor ? 'text-white' : 'text-gray-500 dark:text-blue-300'}`} />
-                              </div>
-                              <div className="ml-3 text-left">
-                                <p className={`font-medium ${doctor === selectedDoctor ? 'text-medical-blue-800 dark:text-white' : 'text-gray-800 dark:text-gray-200'}`}>{doctor}</p>
-                                <p className="text-sm text-gray-500">General Physician</p>
-                              </div>
-                            </motion.button>
-                          ))}
+                                  }`}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setSelectedDoctor(doctor);
+                                }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                              >
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${doctor._id === selectedDoctor?._id ? 'bg-medical-blue-600 dark:bg-blue-500' : 'bg-white dark:bg-white'}`}>
+                                  <User className={`h-5 w-5 ${doctor._id === selectedDoctor?._id ? 'text-white' : 'text-gray-500 dark:text-blue-300'}`} />
+                                </div>
+                                <div className="ml-3 text-left flex-1">
+                                  <p className={`font-medium ${doctor._id === selectedDoctor?._id ? 'text-medical-blue-800 dark:text-white' : 'text-gray-800 dark:text-gray-200'}`}>
+                                    {doctor.name}
+                                  </p>
+                                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    {doctor.specialization}
+                                  </p>
+                                  <div className="flex items-center mt-1">
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                      {doctor.department}
+                                    </span>
+                                    {doctor.rating > 0 && (
+                                      <span className="ml-2 text-xs text-yellow-600 dark:text-yellow-400">
+                                        ★ {doctor.rating.toFixed(1)} ({doctor.totalRatings})
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                {doctor.consultationFee > 0 && (
+                                  <div className="text-right">
+                                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                      ₹{doctor.consultationFee}
+                                    </p>
+                                  </div>
+                                )}
+                              </motion.button>
+                            ))
+                          ) : (
+                            <div className="text-center py-8">
+                              <p className="text-gray-500 dark:text-gray-400">No doctors available at the moment</p>
+                              <button
+                                type="button"
+                                onClick={() => window.location.reload()}
+                                className="mt-2 text-medical-blue-600 hover:text-medical-blue-700 text-sm"
+                              >
+                                Refresh
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </motion.div>
                   )}
-                  
+
                   {activeStep === 3 && (
-                    <motion.div 
+                    <motion.div
                       className="space-y-6"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -436,7 +541,7 @@ const AppointmentCard: React.FC = () => {
                             required
                           />
                         </div>
-                        
+
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Email*</label>
                           <input
@@ -466,10 +571,10 @@ const AppointmentCard: React.FC = () => {
                           />
                         </div>
                       </div>
-                      
+
                       <div className="p-4 bg-medical-blue-50 rounded-lg border border-medical-blue-100 dark:bg-gray-800 dark:border-gray-700">
                         <h4 className="font-medium text-medical-blue-800 mb-3 dark:text-blue-200">Appointment Summary</h4>
-                        
+
                         <div className="space-y-3">
                           <div className="flex justify-between">
                             <div className="flex items-center text-gray-700 dark:text-gray-200">
@@ -480,7 +585,7 @@ const AppointmentCard: React.FC = () => {
                               {selectedDate ? format(selectedDate, 'EEEE, MMM d, yyyy') : 'Not selected'}
                             </span>
                           </div>
-                          
+
                           <div className="flex justify-between">
                             <div className="flex items-center text-gray-700 dark:text-gray-200">
                               <Clock className="h-4 w-4 mr-2" />
@@ -490,15 +595,17 @@ const AppointmentCard: React.FC = () => {
                               {selectedTime ? formatTimeForDisplay(selectedTime) : 'Not selected'}
                             </span>
                           </div>
-                          
+
                           <div className="flex justify-between">
                             <div className="flex items-center text-gray-700 dark:text-gray-200">
                               <Stethoscope className="h-4 w-4 mr-2" />
                               <span className="text-sm">Doctor:</span>
                             </div>
-                            <span className="text-sm font-medium dark:text-gray-100">{selectedDoctor}</span>
+                            <span className="text-sm font-medium dark:text-gray-100">
+                              {selectedDoctor ? `${selectedDoctor.name} (${selectedDoctor.specialization})` : 'Not selected'}
+                            </span>
                           </div>
-                          
+
                           <div className="flex justify-between">
                             <div className="flex items-center text-gray-700 dark:text-gray-200">
                               <svg
@@ -519,7 +626,7 @@ const AppointmentCard: React.FC = () => {
                             <span className="text-sm font-medium dark:text-gray-100">{selectedType}</span>
                           </div>
                         </div>
-                        
+
                         {!isAuthenticated && (
                           <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                             <p className="text-sm text-amber-700 flex items-center">
@@ -529,7 +636,7 @@ const AppointmentCard: React.FC = () => {
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">Additional Notes</label>
                         <textarea
@@ -543,10 +650,10 @@ const AppointmentCard: React.FC = () => {
                       </div>
                     </motion.div>
                   )}
-                  
+
                   <div className="flex justify-between mt-8">
                     {activeStep > 1 ? (
-                      <motion.button 
+                      <motion.button
                         type="button"
                         onClick={() => setActiveStep(activeStep - 1)}
                         className="px-6 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-medical-blue-500"
@@ -558,20 +665,47 @@ const AppointmentCard: React.FC = () => {
                     ) : (
                       <div></div>
                     )}
-                    
-                    <motion.button 
-                      type={activeStep === 3 ? 'submit' : 'button'}
-                      onClick={activeStep === 3 ? undefined : handleNextStep}
-                      className={`px-6 py-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-medical-blue-500 ${
-                        activeStep === 3 
-                          ? 'bg-medical-green-500 text-white hover:bg-medical-green-600' 
-                          : 'bg-medical-blue-500 text-white hover:bg-medical-blue-600'
-                      }`}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      {activeStep === 3 ? (isAuthenticated ? 'Confirm Booking' : 'Sign In & Book') : 'Continue'}
-                    </motion.button>
+
+                    <div className="flex items-center justify-between">
+                      {activeStep > 1 && (
+                        <motion.button
+                          type="button"
+                          onClick={() => setActiveStep(activeStep - 1)}
+                          className="px-6 py-2 rounded-lg font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-medical-blue-500"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          Previous
+                        </motion.button>
+                      )}
+
+                      <div className="flex items-center space-x-3 ml-auto">
+                        {isAuthenticated && activeStep === 3 && (
+                          <motion.button
+                            type="button"
+                            onClick={() => navigate('/my-appointments')}
+                            className="px-4 py-2 rounded-lg font-medium text-medical-blue-600 hover:bg-medical-blue-50 dark:text-medical-blue-400 dark:hover:bg-medical-blue-900/20 transition-colors focus:outline-none focus:ring-2 focus:ring-medical-blue-500"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            View My Appointments
+                          </motion.button>
+                        )}
+
+                        <motion.button
+                          type={activeStep === 3 ? 'submit' : 'button'}
+                          onClick={activeStep === 3 ? undefined : handleNextStep}
+                          className={`px-6 py-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-medical-blue-500 ${activeStep === 3
+                            ? 'bg-medical-green-500 text-white hover:bg-medical-green-600'
+                            : 'bg-medical-blue-500 text-white hover:bg-medical-blue-600'
+                            }`}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {activeStep === 3 ? (isAuthenticated ? 'Confirm Booking' : 'Sign In & Book') : 'Continue'}
+                        </motion.button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </form>

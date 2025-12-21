@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import authService, { User } from '@/services/authService';
-
-// This would normally be in an environment variable
-const JWT_SECRET = "your_jwt_secret_key";
+import { toast } from 'sonner';
 
 type AuthContextType = {
   user: User | null;
@@ -10,7 +8,18 @@ type AuthContextType = {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   loginWithGoogle: () => Promise<boolean>;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
+  register: (
+    name: string, 
+    email: string, 
+    password: string, 
+    additionalData?: {
+      role?: string;
+      specialization?: string;
+      department?: string;
+      licenseNumber?: string;
+      consultationFee?: number;
+    }
+  ) => Promise<boolean>;
   logout: () => void;
 };
 
@@ -58,12 +67,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         authService.storeAuthData(response.data.token, userData);
         setUser(userData);
+        toast.success(`Welcome back, ${userData.name}!`);
         return true;
       }
       
+      toast.error('Login failed. Please check your credentials.');
       return false;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
+      const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+      toast.error(errorMessage);
       return false;
     } finally {
       setIsLoading(false);
@@ -107,21 +120,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (name: string, email: string, password: string): Promise<boolean> => {
+  const register = async (
+    name: string, 
+    email: string, 
+    password: string, 
+    additionalData?: {
+      role?: string;
+      specialization?: string;
+      department?: string;
+      licenseNumber?: string;
+      consultationFee?: number;
+    }
+  ): Promise<boolean> => {
     setIsLoading(true);
     
     try {
-      const response = await authService.register({ name, email, password });
+      const registrationData = {
+        name,
+        email,
+        password,
+        ...additionalData
+      };
+      
+      const response = await authService.register(registrationData);
       
       if (response.success) {
-        // Don't automatically log in after registration
-        // User should log in separately
+        toast.success('Registration successful! Please log in with your credentials.');
         return true;
       }
       
+      toast.error('Registration failed. Please try again.');
       return false;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error);
+      const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';
+      toast.error(errorMessage);
       return false;
     } finally {
       setIsLoading(false);

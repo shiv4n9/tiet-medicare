@@ -9,6 +9,8 @@ import MentalHealthSupport from '../components/MentalHealthSupport';
 import Footer from '../components/Footer';
 import ChatBot from '../components/ChatBot/ChatBot';
 import AnimatedBackground from '../components/AnimatedBackground';
+import StatsStrip from '../components/StatsStrip';
+import EmergencySOS from '../components/EmergencySOS';
 
 const Index: React.FC = () => {
   // Function to toggle chat that can be passed to components
@@ -64,6 +66,7 @@ const Index: React.FC = () => {
       <Navbar />
       <main className="flex-grow">
         <Hero />
+        <StatsStrip />
         <Features />
         <section id="appointments">
           <AppointmentCard />
@@ -77,6 +80,7 @@ const Index: React.FC = () => {
       </main>
       <Footer />
       <ChatBot />
+      <EmergencySOS />
     </div>
   );
 };

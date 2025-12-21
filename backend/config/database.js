@@ -21,6 +21,7 @@ export const connectDB = async () => {
     }
 
     console.log(colors.cyan('🔌 Connecting to MongoDB...'));
+    console.log(colors.gray(`Connection string: ${MONGODB_URI.replace(/:[^:@]+@/, ':****@')}`));
     
     const conn = await mongoose.connect(MONGODB_URI, dbConfig.options);
     
@@ -37,15 +38,30 @@ export const connectDB = async () => {
     return conn;
   } catch (error) {
     console.error(colors.red(`❌ MongoDB Connection Error: ${error.message}`));
+    console.error(colors.red(`Error name: ${error.name}`));
+    console.error(colors.red(`Full error:`, error));
     
     // Provide helpful error messages
     if (error.message.includes('ECONNREFUSED')) {
       console.error(colors.red('💡 Tip: Make sure your local MongoDB server is running'));
-    } else if (error.message.includes('Authentication failed')) {
+      console.error(colors.yellow('💡 Or switch to MongoDB Atlas in your .env file'));
+    } else if (error.message.includes('Authentication failed') || error.message.includes('auth')) {
       console.error(colors.red('💡 Tip: Check your MongoDB Atlas username and password'));
-    } else if (error.message.includes('ENOTFOUND')) {
+      console.error(colors.yellow('💡 Make sure special characters in password are URL encoded'));
+    } else if (error.message.includes('ENOTFOUND') || error.message.includes('getaddrinfo')) {
       console.error(colors.red('💡 Tip: Check your MongoDB Atlas connection string'));
+      console.error(colors.yellow('💡 Make sure your cluster is running and accessible'));
+    } else if (error.message.includes('IP') || error.message.includes('whitelist')) {
+      console.error(colors.red('💡 Tip: Add your IP address to MongoDB Atlas Network Access'));
+      console.error(colors.yellow('💡 Or allow access from anywhere (0.0.0.0/0) for testing'));
     }
+    
+    console.error(colors.red('\n🔧 To fix MongoDB Atlas connection:'));
+    console.error(colors.yellow('1. Go to https://cloud.mongodb.com'));
+    console.error(colors.yellow('2. Select your cluster → Network Access'));
+    console.error(colors.yellow('3. Click "Add IP Address" → "Allow Access from Anywhere"'));
+    console.error(colors.yellow('4. Wait 2-3 minutes for changes to apply'));
+    console.error(colors.yellow('5. Restart your backend server\n'));
     
     process.exit(1);
   }

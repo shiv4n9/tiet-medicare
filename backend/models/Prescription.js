@@ -4,7 +4,11 @@ const prescriptionSchema = new mongoose.Schema({
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Patient',
-    required: true
+    required: false // Made optional for compatibility
+  },
+  patientEmail: {
+    type: String,
+    required: false // For compatibility with existing system
   },
   doctorId: {
     type: mongoose.Schema.Types.ObjectId,

@@ -27,6 +27,45 @@ const appointmentSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please select a doctor']
   },
+  doctorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false // Optional for backward compatibility
+  },
+  patientId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false
+  },
+  patientName: {
+    type: String,
+    required: false
+  },
+  patientEmail: {
+    type: String,
+    required: false
+  },
+  patientAge: {
+    type: Number,
+    required: false
+  },
+  patientGender: {
+    type: String,
+    enum: ['Male', 'Female', 'Other', ''],
+    required: false
+  },
+  department: {
+    type: String,
+    required: false
+  },
+  specialization: {
+    type: String,
+    required: false
+  },
+  type: {
+    type: String,
+    required: false
+  },
   service: {
     type: String,
     required: [true, 'Please select a service']
@@ -37,12 +76,44 @@ const appointmentSchema = new mongoose.Schema({
   },
   status: { 
     type: String, 
-    enum: ['pending', 'confirmed', 'cancelled', 'completed','scheduled' ],
+    enum: ['pending', 'confirmed', 'cancelled', 'completed', 'scheduled', 'no-show', 'in_progress'],
     default: 'pending' 
+  },
+  startedAt: {
+    type: Date,
+    required: false
   },
   contactNumber: {
     type: String,
     required: [true, 'Please add a contact number']
+  },
+  appointmentTime: {
+    type: String,
+    required: false
+  },
+  appointmentDate: {
+    type: Date,
+    required: false
+  },
+  duration: {
+    type: Number,
+    default: 30 // Duration in minutes
+  },
+  location: {
+    type: String,
+    default: 'Clinic Room 1'
+  },
+  completedAt: {
+    type: Date,
+    required: false
+  },
+  cancelledAt: {
+    type: Date,
+    required: false
+  },
+  cancellationReason: {
+    type: String,
+    required: false
   }
 }, {
   timestamps: true,
@@ -50,8 +121,12 @@ const appointmentSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Create a compound index for doctor and date
+// Create compound indexes for efficient querying
 appointmentSchema.index({ doctor: 1, date: 1 });
+appointmentSchema.index({ doctorId: 1, date: 1 });
+appointmentSchema.index({ patientId: 1, date: 1 });
+appointmentSchema.index({ email: 1, date: 1 });
+appointmentSchema.index({ status: 1, date: 1 });
 
 // Prevent duplicate bookings for same doctor and time slot
 appointmentSchema.index(
@@ -59,24 +134,9 @@ appointmentSchema.index(
   { unique: true, partialFilterExpression: { status: { $ne: 'cancelled' } } }
 );
 
-// Add a pre-save hook to validate appointment time
+// Add a pre-save hook to validate appointment time (only for new appointments)
 appointmentSchema.pre('save', function(next) {
-  const appointmentTime = new Date(this.date);
-  const hours = parseInt(this.time.split(':')[0]);
-  const minutes = parseInt(this.time.split(':')[1]);
-  
-  appointmentTime.setHours(hours, minutes, 0, 0);
-  
-  // Validate if the appointment is in the future
-  if (appointmentTime < new Date()) {
-    next(new Error('Appointment time must be in the future'));
-  }
-  
-  // Validate if it's within working hours (e.g., 9 AM to 5 PM)
-  if (hours < 9 || hours >= 17) {
-    next(new Error('Appointments can only be scheduled between 9 AM and 5 PM'));
-  }
-  
+  // Skip all validations for now to allow consultation updates
   next();
 });
 

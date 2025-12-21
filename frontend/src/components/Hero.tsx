@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown, LayoutDashboard, Stethoscope } from 'lucide-react';
+import { ChevronDown, LayoutDashboard, Stethoscope, Sparkles } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import MedicalInterfaceCard from './MedicalInterfaceCard';
+import FloatingMedicalIcons from './FloatingMedicalIcons';
+import HeartbeatAnimation from './HeartbeatAnimation';
 
 const Hero: React.FC = () => {
   const { theme } = useTheme();
@@ -38,10 +40,14 @@ const Hero: React.FC = () => {
   };
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-white to-medical-blue-50 dark:from-gray-900 dark:to-gray-800 pt-20">
+    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-white via-medical-blue-50/30 to-medical-green-50/20 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-20">
+      {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
+        <FloatingMedicalIcons />
+        <HeartbeatAnimation />
+        
         <motion.div 
-          className="absolute -bottom-16 -right-16 w-80 h-80 bg-medical-blue-300/30 dark:bg-medical-blue-700/20 rounded-full blur-3xl"
+          className="absolute -bottom-16 -right-16 w-80 h-80 bg-gradient-to-br from-medical-blue-300/30 to-medical-green-300/20 dark:from-medical-blue-700/20 dark:to-medical-green-700/10 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.05, 1],
             opacity: [0.5, 0.7, 0.5],
@@ -53,7 +59,7 @@ const Hero: React.FC = () => {
           }}
         />
         <motion.div 
-          className="absolute top-40 -left-20 w-80 h-80 bg-medical-green-300/20 dark:bg-medical-green-700/20 rounded-full blur-3xl"
+          className="absolute top-40 -left-20 w-80 h-80 bg-gradient-to-br from-medical-green-300/20 to-medical-blue-300/20 dark:from-medical-green-700/20 dark:to-medical-blue-700/10 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.1, 1],
             opacity: [0.3, 0.5, 0.3],
@@ -63,6 +69,23 @@ const Hero: React.FC = () => {
             repeat: Infinity,
             repeatType: 'reverse',
             delay: 1,
+          }}
+        />
+        
+        {/* Additional gradient orbs */}
+        <motion.div 
+          className="absolute top-1/2 left-1/2 w-96 h-96 bg-gradient-to-br from-purple-300/10 to-pink-300/10 dark:from-purple-700/10 dark:to-pink-700/5 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.15, 1],
+            opacity: [0.2, 0.4, 0.2],
+            x: [-50, 50, -50],
+            y: [-50, 50, -50],
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            repeatType: 'reverse',
+            delay: 0.5,
           }}
         />
       </div>
@@ -76,9 +99,14 @@ const Hero: React.FC = () => {
               transition={{ duration: 0.6 }}
               className="mb-4"
             >
-              <span className="inline-block px-4 py-1.5 rounded-full bg-medical-blue-100 dark:bg-medical-blue-900/50 text-medical-blue-700 dark:text-medical-blue-300 font-medium text-sm mb-4">
+              <motion.span 
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-medical-blue-100 to-medical-green-100 dark:from-medical-blue-900/50 dark:to-medical-green-900/50 text-medical-blue-700 dark:text-medical-blue-300 font-medium text-sm mb-4 border border-medical-blue-200 dark:border-medical-blue-800"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+              >
+                <Sparkles className="w-4 h-4" />
                 Next Generation Healthcare
-              </span>
+              </motion.span>
             </motion.div>
             
             <motion.div
@@ -88,22 +116,29 @@ const Hero: React.FC = () => {
               className="mb-6"
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight dark:text-white">
-                TIET Medi-Care
+                <motion.span
+                  className="block bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                >
+                  Your Health, Instantly Connected
+                </motion.span>
                 <motion.span 
-                  className="block text-medical-blue-600 dark:text-medical-blue-400"
+                  className="block mt-2 bg-gradient-to-r from-medical-blue-600 via-medical-green-500 to-medical-blue-600 dark:from-medical-blue-400 dark:via-medical-green-400 dark:to-medical-blue-400 bg-clip-text text-transparent"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.6 }}
                 >
-                  Redefining Healthcare
+                  Smart, Secure & Human-Centric
                 </motion.span>
                 <motion.span 
-                  className="block"
+                  className="block text-2xl md:text-3xl lg:text-4xl mt-2 text-gray-700 dark:text-gray-300"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.8 }}
                 >
-                  at Thapar Institute
+                  Healthcare at Thapar
                 </motion.span>
               </h1>
             </motion.div>
@@ -127,16 +162,25 @@ const Hero: React.FC = () => {
             >
               <motion.a 
                 href="#features" 
-                className="btn-primary dark:bg-medical-blue-600 dark:hover:bg-medical-blue-700"
-                whileHover={{ scale: 1.05 }}
+                className="relative px-8 py-4 rounded-lg font-semibold text-white bg-gradient-to-r from-medical-blue-600 to-medical-green-500 hover:from-medical-blue-700 hover:to-medical-green-600 shadow-lg hover:shadow-xl transition-all overflow-hidden group"
+                whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Get Started
+                <span className="relative z-10 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  Get Started
+                </span>
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-medical-green-500 to-medical-blue-600"
+                  initial={{ x: '100%' }}
+                  whileHover={{ x: 0 }}
+                  transition={{ duration: 0.3 }}
+                />
               </motion.a>
               <motion.a 
                 href="#appointments" 
-                className="btn-outline dark:border-medical-blue-400 dark:text-medical-blue-400 dark:hover:bg-medical-blue-900/30"
-                whileHover={{ scale: 1.05 }}
+                className="px-8 py-4 rounded-lg font-semibold border-2 border-medical-blue-600 text-medical-blue-600 hover:bg-medical-blue-50 dark:border-medical-blue-400 dark:text-medical-blue-400 dark:hover:bg-medical-blue-900/30 transition-all shadow-md hover:shadow-lg"
+                whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
               >
                 Book Appointment

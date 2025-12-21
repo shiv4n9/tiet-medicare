@@ -152,9 +152,11 @@ const Navbar: React.FC = () => {
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center" onClick={() => navigate('/my-appointments')}>
-                    <span>My Appointments</span>
-                  </DropdownMenuItem>
+                  {user?.role !== 'doctor' && (
+                    <DropdownMenuItem className="flex items-center" onClick={() => navigate('/my-appointments')}>
+                      <span>My Appointments</span>
+                    </DropdownMenuItem>
+                  )}
                   {user?.role === 'admin' && (
                     <>
                       <DropdownMenuSeparator />
@@ -176,6 +178,18 @@ const Navbar: React.FC = () => {
                       >
                         <Stethoscope className="mr-2 h-4 w-4" />
                         <span>Doctor Dashboard</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {user?.role === 'patient' && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        className="flex items-center text-medical-blue-600 dark:text-medical-blue-400 font-medium"
+                        onClick={() => navigate('/patient')}
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Patient Dashboard</span>
                       </DropdownMenuItem>
                     </>
                   )}
@@ -228,9 +242,11 @@ const Navbar: React.FC = () => {
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/my-appointments')}>
-                    <span>My Appointments</span>
-                  </DropdownMenuItem>
+                  {user?.role !== 'doctor' && (
+                    <DropdownMenuItem onClick={() => navigate('/my-appointments')}>
+                      <span>My Appointments</span>
+                    </DropdownMenuItem>
+                  )}
                   {user?.role === 'admin' && (
                     <>
                       <DropdownMenuSeparator />
@@ -258,6 +274,21 @@ const Navbar: React.FC = () => {
                       >
                         <Stethoscope className="mr-2 h-4 w-4" />
                         <span>Doctor Dashboard</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {user?.role === 'patient' && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        className="text-medical-blue-600 dark:text-medical-blue-400 font-medium"
+                        onClick={() => {
+                          navigate('/patient');
+                          setIsMenuOpen(false);
+                        }}
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Patient Dashboard</span>
                       </DropdownMenuItem>
                     </>
                   )}

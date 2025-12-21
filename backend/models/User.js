@@ -23,6 +23,31 @@ const userSchema = new mongoose.Schema({
     },
     minlength: [6, 'Password must be at least 6 characters']
   },
+  phone: {
+    type: String,
+    trim: true
+  },
+  address: {
+    type: String,
+    trim: true
+  },
+  dateOfBirth: {
+    type: Date
+  },
+  gender: {
+    type: String,
+    enum: ['Male', 'Female', 'Other', ''],
+    default: ''
+  },
+  bloodGroup: {
+    type: String,
+    enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', ''],
+    default: ''
+  },
+  emergencyContact: {
+    type: String,
+    trim: true
+  },
   authProvider: {
     type: String,
     enum: ['email', 'google'],

@@ -66,6 +66,12 @@ export interface User {
   name: string;
   email: string;
   role?: string;
+  phone?: string;
+  address?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  bloodGroup?: string;
+  emergencyContact?: string;
   specialization?: string;
   authProvider?: 'email' | 'google';
   isActive?: boolean;

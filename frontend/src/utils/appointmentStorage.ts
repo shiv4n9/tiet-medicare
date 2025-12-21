@@ -52,13 +52,28 @@ export const saveAppointment = async (appointment: AppointmentDetails): Promise<
     
     // Ensure date is in ISO string format for the backend
     const appointmentToSave = {
-      ...appointment,
-      date: appointment.date instanceof Date ? appointment.date.toISOString() : appointment.date
+      name: appointment.patientName || appointment.name,
+      email: appointment.patientEmail || appointment.email,
+      contactNumber: appointment.contactNumber,
+      date: appointment.date instanceof Date ? appointment.date.toISOString() : appointment.date,
+      time: appointment.time,
+      doctor: appointment.doctor,
+      doctorId: appointment.doctorId,
+      department: appointment.department || appointment.service,
+      specialization: appointment.specialization,
+      type: appointment.type,
+      service: appointment.service || appointment.type,
+      notes: appointment.notes || '',
+      status: appointment.status || 'scheduled',
     };
     
     console.log('Formatted appointment for API:', JSON.stringify(appointmentToSave, null, 2));
     
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/appointments`, {
+    // Get API URL with fallback
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    console.log('Using API URL:', apiUrl);
+    
+    const response = await fetch(`${apiUrl}/api/appointments`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -67,11 +82,23 @@ export const saveAppointment = async (appointment: AppointmentDetails): Promise<
       credentials: 'include',
     });
 
+    console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers);
+
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('Non-JSON response:', text);
+      throw new Error('Server returned non-JSON response');
+    }
+
     const responseData = await response.json();
+    console.log('Response data:', responseData);
     
     if (!response.ok) {
       console.error('Error response from server:', responseData);
-      throw new Error(responseData.error || 'Failed to save appointment');
+      throw new Error(responseData.error || responseData.message || 'Failed to save appointment');
     }
     
     console.log('Appointment saved successfully:', responseData);
@@ -80,29 +107,21 @@ export const saveAppointment = async (appointment: AppointmentDetails): Promise<
       ...responseData.data,
       date: new Date(responseData.data.date)
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in saveAppointment:', {
       error,
-      errorMessage: error.message,
-      errorName: error.name,
-      errorStack: error.stack,
+      errorMessage: error?.message,
+      errorName: error?.name,
+      errorStack: error?.stack,
     });
     
-    if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      console.error('Error response data:', error.response.data);
-      console.error('Error status:', error.response.status);
-      console.error('Error headers:', error.response.headers);
-      throw new Error(error.response.data.message || 'Failed to save appointment');
-    } else if (error.request) {
-      // The request was made but no response was received
-      console.error('No response received:', error.request);
-      throw new Error('No response from server. Please check your connection.');
+    // Re-throw with a user-friendly message
+    if (error.message.includes('JSON')) {
+      throw new Error('Failed to communicate with server. Please try again.');
+    } else if (error.message.includes('fetch')) {
+      throw new Error('Network error. Please check your connection.');
     } else {
-      // Something happened in setting up the request that triggered an Error
-      console.error('Error:', error.message);
-      throw error;
+      throw new Error(error.message || 'Failed to save appointment. Please try again.');
     }
   }
 };

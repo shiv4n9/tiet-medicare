@@ -117,26 +117,27 @@
   }
   
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-2;
   }
   
-  /* Button styles */
+  /* Enhanced Button styles with gradients */
   .btn-primary {
-    @apply bg-medical-blue-500 text-white px-6 py-3 rounded-lg font-medium 
-    transition-all duration-300 hover:bg-medical-blue-600 hover:shadow-lg 
-    focus:outline-none focus:ring-2 focus:ring-medical-blue-400 focus:ring-opacity-50;
+    @apply bg-gradient-to-r from-medical-blue-500 to-medical-blue-600 text-white px-8 py-3 rounded-lg font-semibold 
+    transition-all duration-300 hover:from-medical-blue-600 hover:to-medical-blue-700 hover:shadow-xl hover:scale-105
+    focus:outline-none focus:ring-2 focus:ring-medical-blue-400 focus:ring-opacity-50 active:scale-95;
   }
   
   .btn-secondary {
-    @apply bg-medical-green-500 text-white px-6 py-3 rounded-lg font-medium 
-    transition-all duration-300 hover:bg-medical-green-600 hover:shadow-lg 
-    focus:outline-none focus:ring-2 focus:ring-medical-green-400 focus:ring-opacity-50;
+    @apply bg-gradient-to-r from-medical-green-500 to-medical-green-600 text-white px-8 py-3 rounded-lg font-semibold 
+    transition-all duration-300 hover:from-medical-green-600 hover:to-medical-green-700 hover:shadow-xl hover:scale-105
+    focus:outline-none focus:ring-2 focus:ring-medical-green-400 focus:ring-opacity-50 active:scale-95;
   }
   
   .btn-outline {
-    @apply border border-medical-blue-500 text-medical-blue-500 px-6 py-3 rounded-lg font-medium 
-    transition-all duration-300 hover:bg-medical-blue-50 hover:shadow-md 
-    focus:outline-none focus:ring-2 focus:ring-medical-blue-400 focus:ring-opacity-50;
+    @apply border-2 border-medical-blue-500 text-medical-blue-500 px-8 py-3 rounded-lg font-semibold 
+    transition-all duration-300 hover:bg-medical-blue-50 hover:shadow-lg hover:scale-105
+    dark:border-medical-blue-400 dark:text-medical-blue-400 dark:hover:bg-medical-blue-900/30
+    focus:outline-none focus:ring-2 focus:ring-medical-blue-400 focus:ring-opacity-50 active:scale-95;
   }
   
   /* Section layout styles */
@@ -155,6 +156,16 @@
   /* Dark mode transitions */
   .theme-transition {
     @apply transition-colors duration-300;
+  }
+  
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-medical-blue-600 via-medical-green-500 to-medical-blue-600 bg-clip-text text-transparent;
+  }
+  
+  /* Card with 3D effect */
+  .card-3d {
+    @apply transform transition-all duration-300 hover:scale-105 hover:rotate-1 hover:shadow-2xl;
   }
 }
 

@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Loader2, Search, UserPlus, UserCheck, UserX, Users, Shield, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import adminService, { User } from '@/services/adminService';
+import Breadcrumb from '@/components/Breadcrumb';
 
 const AdminDashboard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -194,13 +195,65 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-        <p className="text-muted-foreground">
-          Manage users, roles, and system settings
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
+              <Button 
+                onClick={() => navigate('/')}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              >
+                <div className="w-8 h-8 bg-medical-blue-600 rounded-lg flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-white" />
+                </div>
+              </Button>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Manage users, roles, and system settings</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              {/* Navigation Buttons */}
+              <div className="hidden md:flex items-center space-x-2">
+                <Button 
+                  onClick={() => navigate('/doctor')}
+                  className="text-sm bg-medical-blue-100 hover:bg-medical-blue-200 text-medical-blue-700 dark:bg-medical-blue-800 dark:hover:bg-medical-blue-700 dark:text-medical-blue-200"
+                >
+                  <UserCheck className="w-4 h-4 mr-2" />
+                  Doctor View
+                </Button>
+                <Button 
+                  onClick={() => navigate('/patient')}
+                  className="text-sm bg-medical-green-100 hover:bg-medical-green-200 text-medical-green-700 dark:bg-medical-green-800 dark:hover:bg-medical-green-700 dark:text-medical-green-200"
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  Patient View
+                </Button>
+                <Button 
+                  onClick={() => navigate('/profile')}
+                  className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200"
+                >
+                  Profile
+                </Button>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Administrator</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="container mx-auto px-4 py-8 space-y-8">
+      {/* Breadcrumb */}
+      <Breadcrumb />
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -475,6 +528,7 @@ const AdminDashboard = () => {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };

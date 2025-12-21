@@ -1,20 +1,13 @@
 import React, { useState } from 'react';
 import BlurEffect from './BlurEffect';
-import { Phone, Clock, MapPin, UserCheck, Check } from 'lucide-react';
+import { Clock, MapPin, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 const EmergencyTracking: React.FC = () => {
-  const [isCallingDriver, setIsCallingDriver] = useState(false);
   const [sosSent, setSosSent] = useState(false);
 
-  const handleCallDriver = () => {
-    setIsCallingDriver(true);
-    toast.info("Connecting to driver...", { duration: 2000 });
-    
-    setTimeout(() => {
-      setIsCallingDriver(false);
-      toast.success("Connected with Driver");
-    }, 2000);
+  const handleFindAmbulance = () => {
+    window.open('https://fantastic-licorice-b76ec1.netlify.app/', '_blank');
   };
 
   const handleSendSOS = () => {
@@ -168,20 +161,11 @@ const EmergencyTracking: React.FC = () => {
                 
                 <div className="flex items-center justify-between">
                   <button 
-                    onClick={handleCallDriver}
-                    className={`flex items-center justify-center gap-2 w-full mr-2 py-3 ${isCallingDriver ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200' : 'bg-medical-blue-50 text-medical-blue-600 dark:bg-gray-900 dark:text-medical-blue-200 hover:bg-medical-blue-100 dark:hover:bg-gray-800'} rounded-lg font-medium transition-colors`}
+                    onClick={handleFindAmbulance}
+                    className="flex items-center justify-center gap-2 w-full mr-2 py-3 bg-medical-blue-50 text-medical-blue-600 dark:bg-gray-900 dark:text-medical-blue-200 hover:bg-medical-blue-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors"
                   >
-                    {isCallingDriver ? (
-                      <>
-                        <UserCheck className="h-4 w-4" />
-                        Connecting...
-                      </>
-                    ) : (
-                      <>
-                        <Phone className="h-4 w-4" />
-                        Call Driver
-                      </>
-                    )}
+                    <MapPin className="h-4 w-4" />
+                    Find My Ambulance
                   </button>
                   
                   <button 

@@ -9,12 +9,29 @@ const router = express.Router();
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
+  const { 
+    name, 
+    email, 
+    password, 
+    role = 'patient',
+    specialization,
+    department,
+    licenseNumber,
+    consultationFee
+  } = req.body;
 
   // Validation
   if (!name || !email || !password) {
     res.status(400);
     throw new Error('Please provide all required fields');
+  }
+
+  // Additional validation for doctors
+  if (role === 'doctor') {
+    if (!specialization || !department || !licenseNumber) {
+      res.status(400);
+      throw new Error('Specialization, department, and license number are required for doctors');
+    }
   }
 
   // Check if user already exists
@@ -24,13 +41,25 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error('User already exists with this email');
   }
 
-  // Create user
-  const user = await User.create({
+  // Create user data object
+  const userData = {
     name,
     email,
     password,
+    role,
     authProvider: 'email'
-  });
+  };
+
+  // Add doctor-specific fields if role is doctor
+  if (role === 'doctor') {
+    userData.specialization = specialization;
+    userData.department = department;
+    userData.licenseNumber = licenseNumber;
+    userData.consultationFee = consultationFee || 0;
+  }
+
+  // Create user
+  const user = await User.create(userData);
 
   if (user) {
     res.status(201).json({
@@ -114,6 +143,12 @@ const getUserProfile = asyncHandler(async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
+        address: user.address,
+        dateOfBirth: user.dateOfBirth,
+        gender: user.gender,
+        bloodGroup: user.bloodGroup,
+        emergencyContact: user.emergencyContact,
         role: user.role,
         authProvider: user.authProvider,
         isActive: user.isActive,
@@ -134,8 +169,16 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
   if (user) {
+    // Update basic info
     user.name = req.body.name || user.name;
-    user.email = req.body.email || user.email;
+    
+    // Update additional profile fields
+    if (req.body.phone !== undefined) user.phone = req.body.phone;
+    if (req.body.address !== undefined) user.address = req.body.address;
+    if (req.body.dateOfBirth !== undefined) user.dateOfBirth = req.body.dateOfBirth;
+    if (req.body.gender !== undefined) user.gender = req.body.gender;
+    if (req.body.bloodGroup !== undefined) user.bloodGroup = req.body.bloodGroup;
+    if (req.body.emergencyContact !== undefined) user.emergencyContact = req.body.emergencyContact;
 
     if (req.body.password) {
       user.password = req.body.password;
@@ -150,8 +193,17 @@ const updateUserProfile = asyncHandler(async (req, res) => {
         _id: updatedUser._id,
         name: updatedUser.name,
         email: updatedUser.email,
+        phone: updatedUser.phone,
+        address: updatedUser.address,
+        dateOfBirth: updatedUser.dateOfBirth,
+        gender: updatedUser.gender,
+        bloodGroup: updatedUser.bloodGroup,
+        emergencyContact: updatedUser.emergencyContact,
         role: updatedUser.role,
         authProvider: updatedUser.authProvider,
+        isActive: updatedUser.isActive,
+        lastLogin: updatedUser.lastLogin,
+        createdAt: updatedUser.createdAt,
         token: generateToken(updatedUser._id)
       }
     });

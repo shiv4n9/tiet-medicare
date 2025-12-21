@@ -3,8 +3,12 @@ import mongoose from 'mongoose';
 const medicalRecordSchema = new mongoose.Schema({
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Patient',
-    required: true
+    ref: 'User',
+    required: false // Made optional - can use patientEmail instead
+  },
+  patientEmail: {
+    type: String,
+    required: false // Fallback for when patientId is not available
   },
   doctorId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -148,6 +152,7 @@ const medicalRecordSchema = new mongoose.Schema({
 
 // Indexes
 medicalRecordSchema.index({ patientId: 1, visitDate: -1 });
+medicalRecordSchema.index({ patientEmail: 1, visitDate: -1 });
 medicalRecordSchema.index({ doctorId: 1, visitDate: -1 });
 medicalRecordSchema.index({ appointmentId: 1 });
 

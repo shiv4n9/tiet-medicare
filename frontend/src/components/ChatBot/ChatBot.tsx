@@ -17,7 +17,7 @@ import { useNavigate } from 'react-router-dom';
 
 const ChatBot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   
   // Store the chat state in local storage
@@ -27,7 +27,7 @@ const ChatBot: React.FC = () => {
   });
 
   // Maximum number of messages allowed for guest users
-  const maxGuestMessages = 3;
+  const maxGuestMessages = 5;
 
   useEffect(() => {
     localStorage.setItem('guestMessagesCount', guestMessagesCount.toString());
@@ -51,30 +51,44 @@ const ChatBot: React.FC = () => {
     <>
       <ChatButton onClick={toggleChat} />
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[450px] h-[600px] flex flex-col p-0 overflow-hidden gap-0 border-medical-blue-200">
-          <DialogHeader className="p-4 border-b bg-gradient-to-r from-medical-blue-50 to-medical-green-50">
-            <div className="flex items-center justify-between">
+        <DialogContent className="sm:max-w-[480px] h-[650px] flex flex-col p-0 overflow-hidden gap-0 border-2 border-medical-blue-200 shadow-2xl rounded-2xl">
+          <DialogHeader className="p-5 border-b border-medical-blue-200/30 bg-gradient-to-r from-medical-blue-500 via-medical-blue-600 to-medical-green-500 relative overflow-hidden">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-2 right-8 w-16 h-16 bg-white rounded-full blur-xl"></div>
+              <div className="absolute bottom-2 left-12 w-12 h-12 bg-white rounded-full blur-lg"></div>
+              <div className="absolute top-4 left-4 w-8 h-8 bg-white rounded-full blur-md animate-pulse"></div>
+            </div>
+            
+            <div className="flex items-center justify-between relative z-10">
               <div className="flex items-center">
                 <motion.div 
-                  className="w-10 h-10 bg-gradient-to-r from-medical-blue-100 to-medical-blue-200 rounded-full flex items-center justify-center mr-3"
-                  initial={{ rotate: 0 }}
-                  animate={{ rotate: [0, 15, 0, -15, 0] }}
-                  transition={{ duration: 1.5, delay: 0.5, repeat: 0, repeatType: "loop" }}
+                  className="w-12 h-12 bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mr-4 shadow-lg border border-white/20"
+                  initial={{ rotate: 0, scale: 0.8 }}
+                  animate={{ rotate: [0, 10, 0, -10, 0], scale: 1 }}
+                  transition={{ duration: 3, delay: 0.5, repeat: Infinity, repeatType: "loop" }}
                 >
-                  <Bot className="h-5 w-5 text-medical-blue-600" />
+                  <Bot className="h-6 w-6 text-white" />
                 </motion.div>
                 <div>
-                  <DialogTitle className="text-xl font-bold">TIET Medi-Care Assistant</DialogTitle>
-                  <DialogDescription className="text-sm text-gray-600">
+                  <DialogTitle className="text-xl font-bold text-white drop-shadow-sm flex items-center gap-2">
+                    TIET Medi-Care Assistant
+                    <motion.span 
+                      className="inline-block w-2 h-2 bg-green-400 rounded-full"
+                      animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-white/90 font-medium">
                     {isAuthenticated 
-                      ? "Ask me anything about healthcare services" 
-                      : `Guest access: ${maxGuestMessages - guestMessagesCount} messages remaining`}
+                      ? `Hi ${user?.name?.split(' ')[0] || 'there'}! How can I help you today?` 
+                      : `Guest mode • ${maxGuestMessages - guestMessagesCount} messages left`}
                   </DialogDescription>
                 </div>
               </div>
               <button 
                 onClick={() => setIsOpen(false)} 
-                className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                className="text-white/80 hover:text-white transition-colors focus:outline-none bg-white/10 hover:bg-white/20 rounded-full p-2 backdrop-blur-sm"
                 aria-label="Close chat"
               >
                 <X className="h-5 w-5" />

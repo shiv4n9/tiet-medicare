@@ -13,7 +13,13 @@
     "setup:atlas": "node scripts/setup-atlas.js",
     "migrate:test-atlas": "node scripts/migrate-to-atlas.js",
     "export:local-data": "node scripts/export-local-data.js",
-    "check:database": "node check-database.js"
+    "check:database": "node check-database.js",
+    "clear:data": "node clear-all-data.js",
+    "clear:appointments": "node scripts/clear-appointments.js",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
+    "test:coverage": "nyc npm test",
+    "health": "curl http://localhost:5000/api/health"
   },
   "keywords": [
     "healthcare",
@@ -31,9 +37,13 @@
     "dotenv": "^16.6.1",
     "express": "^5.1.0",
     "express-async-handler": "^1.2.0",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.14.1",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
