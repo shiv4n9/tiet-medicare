@@ -23,6 +23,7 @@ import prescriptionRoutes from './routes/prescriptions.js';
 import labOrderRoutes from './routes/labs.js';
 import referralNewRoutes from './routes/referrals.js';
 import patientDashboardRoutes from './routes/patientDashboard.js';
+import emergencyRoutes from './routes/emergency.js';
 import User from './models/User.js';
 import colors from 'colors';
 import { initializeChat } from './socket/chatHandler.js';
@@ -166,6 +167,8 @@ app.use('/api/prescriptions', prescriptionRoutes);
 app.use('/api/labs', labOrderRoutes);
 app.use('/api/referrals', referralNewRoutes);
 app.use('/api/patients', patientDashboardRoutes);
+app.use('/api/emergency', emergencyRoutes);
+console.log('✅ Emergency routes registered at /api/emergency');
 
 // Health check endpoint with more details
 app.get('/api/health', (req, res) => {
