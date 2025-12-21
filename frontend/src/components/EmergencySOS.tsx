@@ -1,41 +1,128 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, X, Phone, MapPin, Clock } from 'lucide-react';
+import { AlertTriangle, X, Phone, MapPin, Clock, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const EmergencySOS = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isEmergencyActive, setIsEmergencyActive] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const [isSending, setIsSending] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
-  const handleEmergency = () => {
-    if (!isAuthenticated) {
-      toast.error('Please sign in to use emergency services');
-      navigate('/auth');
-      return;
+  // Get user location on mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.log('Geolocation error:', error.message);
+          // Default to TIET campus center
+          setUserLocation({ lat: 30.3515, lng: 76.3619 });
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
     }
+  }, []);
 
-    setIsEmergencyActive(true);
-    toast.success('Emergency alert sent! Help is on the way.');
-    
-    // Simulate emergency response
-    setTimeout(() => {
-      toast.info('Ambulance dispatched - ETA 5 minutes');
-    }, 2000);
+  const handleEmergency = async () => {
+    setIsSending(true);
 
-    // Navigate to emergency section
-    setTimeout(() => {
-      setIsOpen(false);
-      setIsEmergencyActive(false);
-      const emergencySection = document.getElementById('emergency');
-      if (emergencySection) {
-        emergencySection.scrollIntoView({ behavior: 'smooth' });
+    try {
+      // Get fresh location
+      let location = userLocation || { lat: 30.3515, lng: 76.3619 };
+      
+      if (navigator.geolocation) {
+        try {
+          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              timeout: 5000,
+              maximumAge: 0,
+            });
+          });
+          location = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          setUserLocation(location);
+        } catch (geoError) {
+          console.log('Using cached/default location');
+        }
       }
-    }, 3000);
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      const token = localStorage.getItem('token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${API_URL}/api/emergency/sos`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          location,
+          emergencyType: 'medical',
+          description: 'Emergency SOS triggered from TIET Medi-Care app (SOS Button)',
+          userName: user?.name || 'Anonymous User',
+          userPhone: user?.phone || '',
+          userEmail: user?.email || '',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setIsEmergencyActive(true);
+        toast.success('🚨 Emergency SOS Sent!', {
+          description: `Alert sent to ${data.data.notificationsSent} emergency contacts. Help is on the way!`,
+          duration: 10000,
+        });
+        
+        // Navigate to emergency section after delay
+        setTimeout(() => {
+          setIsOpen(false);
+          setIsEmergencyActive(false);
+          const emergencySection = document.getElementById('emergency');
+          if (emergencySection) {
+            emergencySection.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 5000);
+      } else {
+        throw new Error(data.message || 'Failed to send SOS');
+      }
+    } catch (error: any) {
+      console.error('SOS Error:', error);
+      toast.error('Failed to send SOS', {
+        description: error.message || 'Please try again or call emergency services directly.',
+      });
+      
+      // Show direct call option
+      toast.info('Call emergency directly', {
+        description: 'Ambulance: +91 8288008122 | Toll-Free: 1800 202 4100',
+        duration: 10000,
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleDirectCall = (number: string) => {
+    window.location.href = `tel:${number}`;
   };
 
   return (
@@ -165,36 +252,63 @@ const EmergencySOS = () => {
                     </p>
 
                     <div className="space-y-3 bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
-                      <div className="flex items-center space-x-3 text-sm">
+                      <button 
+                        onClick={() => handleDirectCall('+918288008122')}
+                        className="w-full flex items-center space-x-3 text-sm p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      >
+                        <Phone className="w-5 h-5 text-red-600 dark:text-red-400" />
+                        <span className="text-gray-700 dark:text-gray-300 font-medium">Ambulance: +91 8288008122</span>
+                      </button>
+                      <button 
+                        onClick={() => handleDirectCall('18002024100')}
+                        className="w-full flex items-center space-x-3 text-sm p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                      >
                         <Phone className="w-5 h-5 text-medical-blue-600 dark:text-medical-blue-400" />
-                        <span className="text-gray-700 dark:text-gray-300">Emergency hotline: 1800-XXX-XXXX</span>
-                      </div>
-                      <div className="flex items-center space-x-3 text-sm">
+                        <span className="text-gray-700 dark:text-gray-300 font-medium">TIET Toll-Free: 1800 202 4100</span>
+                      </button>
+                      <div className="flex items-center space-x-3 text-sm p-2">
                         <MapPin className="w-5 h-5 text-medical-green-600 dark:text-medical-green-400" />
-                        <span className="text-gray-700 dark:text-gray-300">Location tracking enabled</span>
+                        <span className="text-gray-700 dark:text-gray-300">
+                          {userLocation ? 'Location tracking enabled' : 'Getting location...'}
+                        </span>
                       </div>
-                      <div className="flex items-center space-x-3 text-sm">
-                        <Clock className="w-5 h-5 text-medical-orange-600 dark:text-medical-orange-400" />
-                        <span className="text-gray-700 dark:text-gray-300">Average response: 5-7 minutes</span>
+                      <div className="flex items-center space-x-3 text-sm p-2">
+                        <Clock className="w-5 h-5 text-orange-500 dark:text-orange-400" />
+                        <span className="text-gray-700 dark:text-gray-300">Average response: 3-5 minutes (on campus)</span>
                       </div>
                     </div>
 
                     <div className="flex space-x-3">
                       <Button
                         onClick={handleEmergency}
-                        className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-6 text-lg"
+                        disabled={isSending}
+                        className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-6 text-lg disabled:opacity-50"
                       >
-                        <AlertTriangle className="w-5 h-5 mr-2" />
-                        Call Emergency
+                        {isSending ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            Sending SOS...
+                          </>
+                        ) : (
+                          <>
+                            <AlertTriangle className="w-5 h-5 mr-2" />
+                            Send Emergency SOS
+                          </>
+                        )}
                       </Button>
                       <Button
                         onClick={() => setIsOpen(false)}
                         variant="outline"
                         className="px-6"
+                        disabled={isSending}
                       >
                         Cancel
                       </Button>
                     </div>
+                    
+                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                      Tap phone numbers above to call directly
+                    </p>
                   </>
                 ) : (
                   <div className="text-center py-8">

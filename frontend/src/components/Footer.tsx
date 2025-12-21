@@ -1,8 +1,29 @@
 
-import React from 'react';
-import { MapPin, Phone, Mail, Twitter, Facebook, Instagram } from 'lucide-react';
+import React, { useState } from 'react';
+import { MapPin, Phone, Mail, Twitter, Facebook, Instagram, Linkedin } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Footer: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes('@')) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    
+    setIsSubscribing(true);
+    // Simulate subscription (in production, this would call a backend API)
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    toast.success('Thank you for subscribing!', {
+      description: 'You will receive health tips and updates at ' + email
+    });
+    setEmail('');
+    setIsSubscribing(false);
+  };
+
   return (
     <footer id="contact" className="bg-medical-blue-900 text-white pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-6 md:px-12">
@@ -18,14 +39,17 @@ const Footer: React.FC = () => {
             </div>
             
             <div className="flex space-x-4">
-              <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+              <a href="https://twitter.com/taboratory" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
                 <Twitter className="h-5 w-5" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+              <a href="https://www.facebook.com/ThaparInstitute" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
                 <Facebook className="h-5 w-5" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+              <a href="https://www.instagram.com/taboratory" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
                 <Instagram className="h-5 w-5" />
+              </a>
+              <a href="https://www.linkedin.com/school/taboratory" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                <Linkedin className="h-5 w-5" />
               </a>
             </div>
           </div>
@@ -57,16 +81,16 @@ const Footer: React.FC = () => {
               <li className="flex items-start">
                 <MapPin className="h-5 w-5 text-medical-blue-300 mr-3 mt-0.5" />
                 <span className="text-medical-blue-100">
-                  Thapar Institute of Engineering & Technology, Patiala, Punjab 147004
+                  Thapar Institute of Engineering & Technology, Bhadson Road, Patiala, Punjab 147004
                 </span>
               </li>
               <li className="flex items-center">
                 <Phone className="h-5 w-5 text-medical-blue-300 mr-3" />
-                <span className="text-medical-blue-100">+91 123 456 7890</span>
+                <a href="tel:18002024100" className="text-medical-blue-100 hover:text-white transition-colors">1800 202 4100 (Toll-Free)</a>
               </li>
               <li className="flex items-center">
                 <Mail className="h-5 w-5 text-medical-blue-300 mr-3" />
-                <span className="text-medical-blue-100">medical@thapar.edu</span>
+                <a href="mailto:registrar@thapar.edu" className="text-medical-blue-100 hover:text-white transition-colors">registrar@thapar.edu</a>
               </li>
             </ul>
           </div>
@@ -76,19 +100,22 @@ const Footer: React.FC = () => {
             <p className="text-medical-blue-100 mb-4">
               Subscribe to our newsletter for health tips and platform updates.
             </p>
-            <form className="space-y-3">
+            <form className="space-y-3" onSubmit={handleSubscribe}>
               <div>
                 <input 
                   type="email" 
-                  placeholder="Your email address" 
+                  placeholder="Your email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-3 rounded-lg bg-white/10 text-white placeholder-medical-blue-200 border border-medical-blue-700 focus:outline-none focus:ring-2 focus:ring-medical-blue-300"
                 />
               </div>
               <button 
-                type="submit" 
-                className="w-full py-3 rounded-lg bg-medical-blue-500 text-white font-medium hover:bg-medical-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-medical-blue-300"
+                type="submit"
+                disabled={isSubscribing}
+                className="w-full py-3 rounded-lg bg-medical-blue-500 text-white font-medium hover:bg-medical-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-medical-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Subscribe
+                {isSubscribing ? 'Subscribing...' : 'Subscribe'}
               </button>
             </form>
           </div>
@@ -99,14 +126,14 @@ const Footer: React.FC = () => {
             &copy; {new Date().getFullYear()} TIET Medi-Care. All rights reserved.
           </p>
           <div className="flex space-x-6">
-            <a href="#" className="text-medical-blue-200 text-sm hover:text-white transition-colors">
+            <a href="https://www.thapar.edu/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-medical-blue-200 text-sm hover:text-white transition-colors">
               Privacy Policy
             </a>
-            <a href="#" className="text-medical-blue-200 text-sm hover:text-white transition-colors">
+            <a href="https://www.thapar.edu/terms" target="_blank" rel="noopener noreferrer" className="text-medical-blue-200 text-sm hover:text-white transition-colors">
               Terms of Service
             </a>
-            <a href="#" className="text-medical-blue-200 text-sm hover:text-white transition-colors">
-              Data Security
+            <a href="https://www.thapar.edu" target="_blank" rel="noopener noreferrer" className="text-medical-blue-200 text-sm hover:text-white transition-colors">
+              TIET Website
             </a>
           </div>
         </div>

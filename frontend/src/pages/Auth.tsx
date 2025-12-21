@@ -20,9 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useAuth } from '@/hooks/useAuth';
-import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import GoogleAuth from '@/components/ui/auth/GoogleAuth';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -171,19 +169,6 @@ const Auth = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <GoogleAuth />
-
-                <div className="relative my-4">
-                  <Separator className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </Separator>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">
-                      Or continue with email
-                    </span>
-                  </div>
-                </div>
-
                 <form onSubmit={loginForm.handleSubmit(onLoginSubmit)}>
                   <div className="space-y-4">
                     <div className="space-y-2">
@@ -236,19 +221,6 @@ const Auth = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <GoogleAuth />
-
-                <div className="relative my-4">
-                  <Separator className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </Separator>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">
-                      Or continue with email
-                    </span>
-                  </div>
-                </div>
-
                 <form onSubmit={signupForm.handleSubmit(onSignupSubmit)}>
                   <div className="space-y-4">
                     <div className="space-y-2">
