@@ -51,7 +51,7 @@ const ChatBot: React.FC = () => {
     <>
       <ChatButton onClick={toggleChat} />
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[480px] h-[650px] flex flex-col p-0 overflow-hidden gap-0 border-2 border-medical-blue-200 shadow-2xl rounded-2xl">
+        <DialogContent className="sm:max-w-[550px] md:max-w-[600px] h-[750px] max-h-[85vh] flex flex-col p-0 overflow-hidden gap-0 border-2 border-medical-blue-200 shadow-2xl rounded-2xl">
           <DialogHeader className="p-5 border-b border-medical-blue-200/30 bg-gradient-to-r from-medical-blue-500 via-medical-blue-600 to-medical-green-500 relative overflow-hidden">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-10">
@@ -103,6 +103,7 @@ const ChatBot: React.FC = () => {
             incrementGuestMessageCount={incrementGuestMessageCount}
             onLoginRequest={handleLogin}
             maxGuestMessages={maxGuestMessages}
+            onCloseChat={() => setIsOpen(false)}
           />
         </DialogContent>
       </Dialog>

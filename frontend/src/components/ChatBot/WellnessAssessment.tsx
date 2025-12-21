@@ -182,34 +182,34 @@ const WellnessAssessment: React.FC<WellnessAssessmentProps> = ({ onComplete, onC
 
     // Mental health recommendations
     if (categoryScores.mentalHealth < 60) {
-      recommendations.push('Consider speaking with a mental health counselor');
+      recommendations.push('Visit TICC Counseling at G-Block 104-105');
+      recommendations.push('Contact Dr. Sonam Dullat: sonam.dullat@thapar.edu');
       recommendations.push('Practice daily mindfulness or meditation (10-15 minutes)');
-      recommendations.push('Try journaling to process emotions');
     }
 
     // Physical health recommendations
     if (categoryScores.physicalHealth < 60) {
+      recommendations.push('Visit TIET Health Centre: 1800 202 4100');
       recommendations.push('Aim for 150 minutes of moderate exercise per week');
       recommendations.push('Establish a consistent sleep schedule (7-9 hours)');
-      recommendations.push('Focus on balanced nutrition with regular meals');
     }
 
     // Social wellbeing recommendations
     if (categoryScores.socialWellbeing < 60) {
-      recommendations.push('Join campus clubs or activities to meet new people');
+      recommendations.push('Join TIET campus clubs or activities');
       recommendations.push('Schedule regular check-ins with friends or family');
-      recommendations.push('Consider group therapy or support groups');
+      recommendations.push('Consider TICC group counseling sessions');
     }
 
     // Academic stress recommendations
     if (categoryScores.academicStress < 60) {
       recommendations.push('Break large tasks into smaller, manageable steps');
       recommendations.push('Use time management techniques like the Pomodoro method');
-      recommendations.push('Seek academic support services or tutoring');
+      recommendations.push('Seek academic support from department tutors');
     }
 
     // General recommendations
-    recommendations.push('Schedule regular health check-ups');
+    recommendations.push('Schedule regular health check-ups at TIET Health Centre');
     recommendations.push('Practice stress-reduction techniques daily');
 
     return recommendations.slice(0, 6); // Limit to top 6 recommendations

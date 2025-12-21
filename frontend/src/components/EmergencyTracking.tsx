@@ -280,7 +280,26 @@ const EmergencyTracking: React.FC = () => {
       </div>
       
       <div className="relative max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        {/* Header Section - Centered above both columns */}
+        <div className="text-center mb-10">
+          <BlurEffect delay={100}>
+            <span className="inline-block px-4 py-1.5 rounded-full bg-red-100 text-red-600 font-medium text-sm mb-4">
+              Critical Response
+            </span>
+          </BlurEffect>
+          
+          <BlurEffect delay={200}>
+            <h2 className="section-title">Real-Time Emergency Assistance</h2>
+          </BlurEffect>
+          
+          <BlurEffect delay={300}>
+            <p className="section-subtitle max-w-3xl mx-auto">
+              Our integrated emergency response system ensures rapid medical assistance during critical situations. Track ambulances in real-time and stay connected with healthcare providers.
+            </p>
+          </BlurEffect>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           <BlurEffect>
             <div className="glass-effect rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
               <div className="relative aspect-[4/3] w-full">
@@ -368,7 +387,7 @@ const EmergencyTracking: React.FC = () => {
                 </div>
               </div>
               
-              <div className="p-6">
+              <div className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold dark:text-gray-200">Emergency Response</h3>
                   <span className={`px-3 py-1 ${sosSent ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-200' : 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-200'} text-sm font-medium rounded-full flex items-center`}>
@@ -377,30 +396,30 @@ const EmergencyTracking: React.FC = () => {
                   </span>
                 </div>
                 
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
+                <p className="text-gray-600 dark:text-gray-300 mb-4 text-sm">
                   {sosSent 
                     ? '🚨 Emergency services have been notified. Help is on the way!'
                     : 'Press Emergency SOS to alert campus security and medical services with your location.'}
                 </p>
                 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
                   <button 
                     onClick={handleFindAmbulance}
-                    className="flex items-center justify-center gap-2 w-full mr-2 py-3 bg-medical-blue-50 text-medical-blue-600 dark:bg-gray-900 dark:text-medical-blue-200 hover:bg-medical-blue-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors"
+                    className="flex items-center justify-center gap-2 flex-1 py-3 bg-medical-blue-50 text-medical-blue-600 dark:bg-gray-900 dark:text-medical-blue-200 hover:bg-medical-blue-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors text-sm"
                   >
                     <MapPin className="h-4 w-4" />
-                    Find My Ambulance
+                    Find Ambulance
                   </button>
                   
                   <button 
                     onClick={handleSOSClick}
-                    className={`flex items-center justify-center gap-2 w-full ml-2 py-3 ${
+                    className={`flex items-center justify-center gap-2 flex-1 py-3 ${
                       sosSent 
                         ? 'bg-green-500 text-white cursor-not-allowed' 
                         : sending 
                           ? 'bg-red-400 text-white cursor-wait'
                           : 'bg-red-500 text-white hover:bg-red-600'
-                    } rounded-lg font-medium transition-colors`}
+                    } rounded-lg font-medium transition-colors text-sm`}
                     disabled={sosSent || sending}
                   >
                     {sending ? (
@@ -429,25 +448,8 @@ const EmergencyTracking: React.FC = () => {
             </div>
           </BlurEffect>
           
-          <div>
-            <BlurEffect delay={100}>
-              <span className="inline-block px-4 py-1.5 rounded-full bg-red-100 text-red-600 font-medium text-sm mb-4">
-                Critical Response
-              </span>
-            </BlurEffect>
-            
-            <BlurEffect delay={200}>
-              <h2 className="section-title">Real-Time <br />Emergency Assistance</h2>
-            </BlurEffect>
-            
-            <BlurEffect delay={300}>
-              <p className="section-subtitle">
-                Our integrated emergency response system ensures rapid medical assistance during critical situations. Track ambulances in real-time and stay connected with healthcare providers.
-              </p>
-            </BlurEffect>
-            
-            <BlurEffect delay={400}>
-              <div className="space-y-6 mt-8">
+          <BlurEffect delay={400}>
+            <div className="space-y-4">
                 <div className="glass-effect rounded-xl p-5 flex items-start hover:shadow-lg transition-all duration-300 border border-red-100 dark:border-red-900/30">
                   <div className="flex-shrink-0 mt-1">
                     <div className="w-12 h-12 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
@@ -459,11 +461,11 @@ const EmergencyTracking: React.FC = () => {
                     </div>
                   </div>
                   <div className="ml-4">
-                    <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">One-Touch Emergency Alert</h3>
+                    <h3 className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">One-Touch Emergency Alert</h3>
                     <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                      Instantly notify TIET Medical Center and campus security with a single tap. Your location and medical information are shared automatically.
+                      Instantly notify TIET Medical Center and campus security. Your location is shared automatically.
                     </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-2 flex flex-wrap gap-2">
                       <a href={`tel:${TIET_EMERGENCY.ambulance}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
                         🚑 Ambulance: {TIET_EMERGENCY.ambulance}
                       </a>
@@ -484,16 +486,13 @@ const EmergencyTracking: React.FC = () => {
                     </div>
                   </div>
                   <div className="ml-4">
-                    <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Campus Security & Safety</h3>
+                    <h3 className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">Campus Security & Safety</h3>
                     <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                      TIET campus has 24/7 security coverage with patrol vehicles and emergency response teams. Contact the central toll-free line for all security assistance.
+                      24/7 security coverage with patrol vehicles and emergency response teams.
                     </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-2 flex flex-wrap gap-2">
                       <a href={`tel:${TIET_EMERGENCY.tollFree}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
-                        🛡️ Security/Main Gate: {TIET_EMERGENCY.tollFree}
-                      </a>
-                      <a href={`mailto:${TIET_EMERGENCY.registrar}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
-                        📧 Registrar: {TIET_EMERGENCY.registrar}
+                        🛡️ Security: {TIET_EMERGENCY.tollFree}
                       </a>
                     </div>
                   </div>
@@ -509,11 +508,11 @@ const EmergencyTracking: React.FC = () => {
                     </div>
                   </div>
                   <div className="ml-4">
-                    <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">TIET Medical & Counseling</h3>
+                    <h3 className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">TIET Medical & Counseling</h3>
                     <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                      TIET provides healthcare and mental health support. TICC (Counselling Cell) is located at G-Block 104-105. Contact counselors via email or the central toll-free line.
+                      Healthcare and mental health support. TICC at G-Block 104-105.
                     </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-2 flex flex-wrap gap-2">
                       <a href={`mailto:${TIET_EMERGENCY.counselor1}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg text-sm font-medium hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">
                         🧠 Dr. Sonam Dullat
                       </a>
@@ -524,33 +523,32 @@ const EmergencyTracking: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Quick Emergency Numbers Card */}
-                <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl p-5 border border-red-200 dark:border-red-800">
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <span className="text-xl">📞</span> Quick Emergency Numbers
-                  </h4>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="text-red-500">🚑</span>
-                      <span className="text-gray-600 dark:text-gray-300">Ambulance: <strong>108</strong></span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-blue-500">👮</span>
-                      <span className="text-gray-600 dark:text-gray-300">Police: <strong>100</strong></span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-orange-500">🔥</span>
-                      <span className="text-gray-600 dark:text-gray-300">Fire: <strong>101</strong></span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-pink-500">👩</span>
-                      <span className="text-gray-600 dark:text-gray-300">Women Helpline: <strong>1091</strong></span>
-                    </div>
+              {/* Quick Emergency Numbers Card */}
+              <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl p-4 border border-red-200 dark:border-red-800">
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                  <span className="text-xl">📞</span> Quick Emergency Numbers
+                </h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-red-500">🚑</span>
+                    <span className="text-gray-600 dark:text-gray-300">Ambulance: <strong>108</strong></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-blue-500">👮</span>
+                    <span className="text-gray-600 dark:text-gray-300">Police: <strong>100</strong></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-orange-500">🔥</span>
+                    <span className="text-gray-600 dark:text-gray-300">Fire: <strong>101</strong></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-pink-500">👩</span>
+                    <span className="text-gray-600 dark:text-gray-300">Women: <strong>1091</strong></span>
                   </div>
                 </div>
               </div>
-            </BlurEffect>
-          </div>
+            </div>
+          </BlurEffect>
         </div>
       </div>
     </section>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +7,6 @@ import {
   MessageCircle, 
   Heart, 
   Shield,
-  Clock,
   MapPin,
   User,
   AlertTriangle,
@@ -23,79 +22,92 @@ interface CrisisSupportProps {
 }
 
 const CrisisSupport: React.FC<CrisisSupportProps> = ({ onClose, onSendMessage }) => {
-  const [selectedSupport, setSelectedSupport] = useState<string>('');
   const [showBreathingExercise, setShowBreathingExercise] = useState(false);
   const [breathingStep, setBreathingStep] = useState(0);
+  const [countdown, setCountdown] = useState(0);
+  const [selectedResource, setSelectedResource] = useState<string | null>(null);
+  const stepRef = useRef<NodeJS.Timeout | null>(null);
+  const isRunningRef = useRef(false);
 
   const crisisResources = [
     {
       id: 'suicide',
       title: 'Suicide Prevention',
-      description: 'If you\'re having thoughts of suicide or self-harm',
+      description: 'Thoughts of suicide or self-harm',
       icon: Shield,
       color: 'text-red-600',
       bgColor: 'bg-red-50',
       borderColor: 'border-red-200',
+      primaryCall: '9152987821',
+      primaryLabel: 'iCall (TISS) - 24/7',
       contacts: [
-        { type: 'National Suicide Prevention Lifeline', number: '988', available: '24/7' },
-        { type: 'Crisis Text Line', number: 'Text HOME to 741741', available: '24/7' },
-        { type: 'Campus Crisis Line', number: '+91-175-239-3000', available: '24/7' }
+        { type: 'iCall (TISS)', number: '9152987821', isPhone: true },
+        { type: 'Vandrevala Foundation', number: '18602662345', isPhone: true },
+        { type: 'TICC Counseling', number: 'sonam.dullat@thapar.edu', isPhone: false }
       ]
     },
     {
       id: 'anxiety',
       title: 'Anxiety Crisis',
-      description: 'Panic attacks, severe anxiety, or overwhelming worry',
+      description: 'Panic attacks or severe anxiety',
       icon: Heart,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
       borderColor: 'border-orange-200',
+      primaryCall: '18002024100',
+      primaryLabel: 'TIET Toll-Free - 24/7',
       contacts: [
-        { type: 'Anxiety & Depression Association', number: '240-485-1001', available: 'Mon-Fri 9-5' },
-        { type: 'Campus Counseling', number: '+91-175-239-3001', available: '24/7' },
-        { type: 'Crisis Text Line', number: 'Text ANXIETY to 741741', available: '24/7' }
+        { type: 'TIET Toll-Free', number: '18002024100', isPhone: true },
+        { type: 'Dr. Sonam Dullat', number: 'sonam.dullat@thapar.edu', isPhone: false },
+        { type: 'Ms. Sukhpreet Kaur', number: 'sukhpreet.kaur@thapar.edu', isPhone: false }
       ]
     },
     {
       id: 'abuse',
       title: 'Abuse & Violence',
-      description: 'Domestic violence, sexual assault, or abuse',
+      description: 'Violence, assault, or harassment',
       icon: Shield,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
       borderColor: 'border-purple-200',
+      primaryCall: '1091',
+      primaryLabel: 'Women Helpline - 24/7',
       contacts: [
-        { type: 'National Domestic Violence Hotline', number: '1-800-799-7233', available: '24/7' },
-        { type: 'RAINN Sexual Assault Hotline', number: '1-800-656-4673', available: '24/7' },
-        { type: 'Campus Safety & Security', number: '+91-175-239-3002', available: '24/7' }
+        { type: 'Women Helpline', number: '1091', isPhone: true },
+        { type: 'Police', number: '100', isPhone: true },
+        { type: 'TIET Registrar', number: 'registrar@thapar.edu', isPhone: false }
       ]
     },
     {
-      id: 'substance',
-      title: 'Substance Crisis',
-      description: 'Substance abuse, addiction, or overdose concerns',
+      id: 'medical',
+      title: 'Medical Emergency',
+      description: 'Urgent medical care needed',
       icon: Headphones,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       borderColor: 'border-green-200',
+      primaryCall: '8288008122',
+      primaryLabel: 'TIET Ambulance - 24/7',
       contacts: [
-        { type: 'SAMHSA National Helpline', number: '1-800-662-4357', available: '24/7' },
-        { type: 'Poison Control', number: '1-800-222-1222', available: '24/7' },
-        { type: 'Campus Health Services', number: '+91-175-239-3003', available: '24/7' }
+        { type: 'TIET Ambulance', number: '8288008122', isPhone: true },
+        { type: 'National Ambulance', number: '108', isPhone: true },
+        { type: 'Emergency', number: '112', isPhone: true }
       ]
     },
     {
       id: 'general',
-      title: 'General Crisis Support',
-      description: 'Any mental health emergency or crisis',
+      title: 'General Crisis',
+      description: 'Any mental health emergency',
       icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200',
+      primaryCall: '18002024100',
+      primaryLabel: 'TIET Toll-Free - 24/7',
       contacts: [
-        { type: 'National Crisis Text Line', number: 'Text HELLO to 741741', available: '24/7' },
-        { type: 'Campus Counseling Center', number: '+91-175-239-3000', available: '24/7' },
-        { type: 'Local Emergency Services', number: '112', available: '24/7' }
+        { type: 'TIET Toll-Free', number: '18002024100', isPhone: true },
+        { type: 'Emergency Services', number: '112', isPhone: true },
+        { type: 'TICC', number: 'sonam.dullat@thapar.edu', isPhone: false }
       ]
     }
   ];
@@ -130,55 +142,143 @@ const CrisisSupport: React.FC<CrisisSupportProps> = ({ onClose, onSendMessage })
     }
   ];
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isRunningRef.current = false;
+      if (stepRef.current) clearTimeout(stepRef.current);
+    };
+  }, []);
+
+  const stopBreathingExercise = () => {
+    isRunningRef.current = false;
+    if (stepRef.current) clearTimeout(stepRef.current);
+    setShowBreathingExercise(false);
+    setBreathingStep(0);
+    setCountdown(0);
+  };
+
   const startBreathingExercise = () => {
+    // Clear any existing timer
+    if (stepRef.current) clearTimeout(stepRef.current);
+    
     setShowBreathingExercise(true);
     setBreathingStep(0);
+    isRunningRef.current = true;
     
-    const runBreathingCycle = (step: number) => {
+    const runCountdown = (step: number, secondsLeft: number) => {
+      if (!isRunningRef.current) return;
+      
       if (step >= breathingSteps.length) {
-        // Completed one cycle, ask if they want to continue
-        setTimeout(() => {
-          setBreathingStep(0);
-        }, 1000);
+        // Completed one cycle
+        setCountdown(0);
+        setBreathingStep(breathingSteps.length);
         return;
       }
-
-      const currentStep = breathingSteps[step];
+      
       setBreathingStep(step);
-
-      setTimeout(() => {
-        runBreathingCycle(step + 1);
-      }, currentStep.duration * 1000);
+      setCountdown(secondsLeft);
+      
+      if (secondsLeft > 0) {
+        // Continue countdown for current step
+        stepRef.current = setTimeout(() => {
+          runCountdown(step, secondsLeft - 1);
+        }, 1000);
+      } else {
+        // Move to next step
+        const nextStep = step + 1;
+        if (nextStep < breathingSteps.length) {
+          stepRef.current = setTimeout(() => {
+            runCountdown(nextStep, breathingSteps[nextStep].duration);
+          }, 100);
+        } else {
+          // Cycle complete
+          setBreathingStep(breathingSteps.length);
+        }
+      }
     };
 
-    runBreathingCycle(0);
+    // Start with first step
+    runCountdown(0, breathingSteps[0].duration);
   };
 
   const handleResourceSelect = (resourceId: string) => {
-    setSelectedSupport(resourceId);
-    const resource = crisisResources.find(r => r.id === resourceId);
-    if (resource) {
-      let message = `🆘 CRISIS SUPPORT - ${resource.title.toUpperCase()}\n\n`;
-      message += `${resource.description}\n\n`;
-      message += `📞 IMMEDIATE HELP AVAILABLE:\n\n`;
-      
-      resource.contacts.forEach(contact => {
-        message += `• ${contact.type}\n`;
-        message += `  📱 ${contact.number}\n`;
-        message += `  🕐 Available: ${contact.available}\n\n`;
-      });
-
-      message += `🚨 REMEMBER:\n`;
-      message += `• You are not alone\n`;
-      message += `• Help is available 24/7\n`;
-      message += `• Your life has value\n`;
-      message += `• Crisis feelings are temporary\n\n`;
-      
-      message += `If this is a life-threatening emergency, call 112 immediately.`;
-
-      onSendMessage(message);
-    }
+    setSelectedResource(resourceId);
   };
+
+  const handleCall = (number: string) => {
+    window.open(`tel:${number}`, '_self');
+  };
+
+  const handleEmail = (email: string) => {
+    window.open(`mailto:${email}?subject=Crisis%20Support%20Request&body=Hi%2C%20I%20need%20immediate%20support.`, '_self');
+  };
+
+  // Show contact details for selected resource
+  if (selectedResource) {
+    const resource = crisisResources.find(r => r.id === selectedResource);
+    if (resource) {
+      const Icon = resource.icon;
+      return (
+        <div className="p-3 h-full flex flex-col overflow-hidden">
+          <div className="mb-3 flex-shrink-0">
+            <Button 
+              onClick={() => setSelectedResource(null)}
+              className="mb-2 bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs"
+            >
+              ← Back
+            </Button>
+            <div className={`p-3 rounded-lg ${resource.bgColor} ${resource.borderColor} border-2`}>
+              <div className="flex items-center mb-2">
+                <Icon className={`w-6 h-6 mr-2 ${resource.color}`} />
+                <h3 className={`text-lg font-semibold ${resource.color}`}>{resource.title}</h3>
+              </div>
+              <p className="text-sm text-gray-600">{resource.description}</p>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
+            <h4 className="text-sm font-semibold text-gray-700">Available Contacts:</h4>
+            {resource.contacts.map((contact, idx) => (
+              <div key={idx} className="flex items-center justify-between p-2 bg-white rounded-lg border">
+                <div>
+                  <p className="text-sm font-medium">{contact.type}</p>
+                  <p className="text-xs text-gray-500">{contact.number}</p>
+                </div>
+                {contact.isPhone ? (
+                  <Button
+                    onClick={() => handleCall(contact.number)}
+                    className="bg-green-500 text-white hover:bg-green-600 text-xs px-3"
+                  >
+                    <Phone className="w-3 h-3 mr-1" />
+                    Call
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => handleEmail(contact.number)}
+                    className="bg-blue-500 text-white hover:bg-blue-600 text-xs px-3"
+                  >
+                    <MessageCircle className="w-3 h-3 mr-1" />
+                    Email
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="pt-3 flex-shrink-0 border-t border-gray-100">
+            <Button 
+              onClick={() => handleCall(resource.primaryCall)}
+              className="w-full bg-red-600 text-white hover:bg-red-700"
+            >
+              <Phone className="w-4 h-4 mr-2" />
+              Call Now: {resource.primaryLabel}
+            </Button>
+          </div>
+        </div>
+      );
+    }
+  }
 
   if (showBreathingExercise) {
     const currentStep = breathingSteps[breathingStep];
@@ -199,14 +299,14 @@ const CrisisSupport: React.FC<CrisisSupportProps> = ({ onClose, onSendMessage })
                 animate={{ scale: 1, opacity: 1 }}
                 className="space-y-6"
               >
-                <div className={`w-32 h-32 mx-auto rounded-full border-4 flex items-center justify-center ${
+                <div className={`w-32 h-32 mx-auto rounded-full border-4 flex items-center justify-center relative ${
                   currentStep.type === 'inhale' ? 'border-blue-400 bg-blue-50' :
                   currentStep.type === 'hold' ? 'border-yellow-400 bg-yellow-50' :
                   currentStep.type === 'exhale' ? 'border-green-400 bg-green-50' :
                   'border-gray-400 bg-gray-50'
                 }`}>
                   <motion.div
-                    className={`w-20 h-20 rounded-full ${
+                    className={`w-20 h-20 rounded-full flex items-center justify-center ${
                       currentStep.type === 'inhale' ? 'bg-blue-400' :
                       currentStep.type === 'hold' ? 'bg-yellow-400' :
                       currentStep.type === 'exhale' ? 'bg-green-400' :
@@ -218,13 +318,18 @@ const CrisisSupport: React.FC<CrisisSupportProps> = ({ onClose, onSendMessage })
                              [1, 1]
                     }}
                     transition={{ duration: currentStep.duration, ease: "easeInOut" }}
-                  />
+                  >
+                    <span className="text-3xl font-bold text-white">{countdown}</span>
+                  </motion.div>
                 </div>
                 
                 <div>
                   <h3 className="text-lg font-semibold mb-2">{currentStep.instruction}</h3>
-                  <div className="text-3xl font-bold text-gray-600">
-                    {currentStep.duration}s
+                  <div className="text-sm text-gray-500">
+                    {currentStep.type === 'inhale' && '🫁 Inhale'}
+                    {currentStep.type === 'hold' && '⏸️ Hold'}
+                    {currentStep.type === 'exhale' && '💨 Exhale'}
+                    {currentStep.type === 'rest' && '😌 Rest'}
                   </div>
                 </div>
               </motion.div>
@@ -240,14 +345,14 @@ const CrisisSupport: React.FC<CrisisSupportProps> = ({ onClose, onSendMessage })
 
         <div className="flex gap-2 mt-6 w-full max-w-md">
           <Button 
-            onClick={() => setShowBreathingExercise(false)}
+            onClick={stopBreathingExercise}
             className="flex-1 bg-gray-200 text-gray-700 hover:bg-gray-300"
           >
             Back to Support
           </Button>
           {isActive ? (
             <Button 
-              onClick={() => setShowBreathingExercise(false)}
+              onClick={stopBreathingExercise}
               className="flex-1 bg-red-100 text-red-700 hover:bg-red-200"
             >
               Stop Exercise
@@ -266,30 +371,30 @@ const CrisisSupport: React.FC<CrisisSupportProps> = ({ onClose, onSendMessage })
   }
 
   return (
-    <div className="p-4 h-full flex flex-col">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-2 text-red-600">🆘 Crisis Support</h3>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+    <div className="p-3 h-full flex flex-col overflow-hidden">
+      <div className="mb-3 flex-shrink-0">
+        <h3 className="text-base font-semibold mb-2 text-red-600">🆘 Crisis Support</h3>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-2">
           <div className="flex items-start">
-            <AlertTriangle className="w-5 h-5 text-red-600 mr-2 mt-0.5" />
-            <div className="text-sm text-red-800">
-              <strong>If this is a life-threatening emergency, call 112 immediately.</strong>
-              <br />You are not alone. Help is available 24/7.
+            <AlertTriangle className="w-4 h-4 text-red-600 mr-2 mt-0.5 flex-shrink-0" />
+            <div className="text-xs text-red-800">
+              <strong>Life-threatening emergency? Call 112 immediately.</strong>
+              <span className="block">You are not alone. Help is available 24/7.</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-4">
+      <div className="flex-1 overflow-y-auto space-y-3 min-h-0 pb-2">
         {/* Immediate Actions */}
         <Card className="border-blue-200 bg-blue-50">
-          <CardHeader>
-            <CardTitle className="text-base text-blue-800">Immediate Support Options</CardTitle>
+          <CardHeader className="py-2 px-3">
+            <CardTitle className="text-sm text-blue-800">Immediate Support</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2 px-3 pb-3">
             <Button 
               onClick={startBreathingExercise}
-              className="w-full bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center"
+              className="w-full bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center text-sm py-2"
             >
               <Heart className="w-4 h-4 mr-2" />
               Start Breathing Exercise (4-7-8)
@@ -297,18 +402,18 @@ const CrisisSupport: React.FC<CrisisSupportProps> = ({ onClose, onSendMessage })
             
             <div className="grid grid-cols-2 gap-2">
               <Button 
-                onClick={() => handleResourceSelect('general')}
-                className="bg-green-100 text-green-700 hover:bg-green-200 text-sm"
+                onClick={() => window.open('tel:18002024100', '_self')}
+                className="w-full bg-green-100 text-green-700 hover:bg-green-200 text-xs py-1"
               >
-                <Phone className="w-4 h-4 mr-1" />
+                <Phone className="w-3 h-3 mr-1" />
                 Call Crisis Line
               </Button>
               <Button 
-                onClick={() => handleResourceSelect('general')}
-                className="bg-purple-100 text-purple-700 hover:bg-purple-200 text-sm"
+                onClick={() => window.open('mailto:sonam.dullat@thapar.edu?subject=Mental%20Health%20Support%20Request&body=Hi%2C%20I%20need%20to%20talk%20to%20someone%20about%20my%20mental%20health.', '_self')}
+                className="w-full bg-purple-100 text-purple-700 hover:bg-purple-200 text-xs py-1"
               >
-                <MessageCircle className="w-4 h-4 mr-1" />
-                Text Support
+                <MessageCircle className="w-3 h-3 mr-1" />
+                Email Support
               </Button>
             </div>
           </CardContent>
@@ -316,25 +421,25 @@ const CrisisSupport: React.FC<CrisisSupportProps> = ({ onClose, onSendMessage })
 
         {/* Crisis Resources */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Select Your Situation</CardTitle>
+          <CardHeader className="py-2 px-3">
+            <CardTitle className="text-sm">Select Your Situation</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2 px-3 pb-3">
             {crisisResources.map((resource) => {
               const Icon = resource.icon;
               return (
                 <motion.button
                   key={resource.id}
                   onClick={() => handleResourceSelect(resource.id)}
-                  className={`w-full p-4 rounded-lg border-2 transition-all text-left ${resource.bgColor} ${resource.borderColor} hover:shadow-md`}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  className={`w-full p-2 rounded-lg border-2 transition-all text-left ${resource.bgColor} ${resource.borderColor} hover:shadow-md`}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
                 >
-                  <div className="flex items-start">
-                    <Icon className={`w-6 h-6 mr-3 mt-1 ${resource.color}`} />
-                    <div className="flex-1">
-                      <h4 className={`font-semibold ${resource.color}`}>{resource.title}</h4>
-                      <p className="text-sm text-gray-600 mt-1">{resource.description}</p>
+                  <div className="flex items-center">
+                    <Icon className={`w-5 h-5 mr-2 flex-shrink-0 ${resource.color}`} />
+                    <div className="flex-1 min-w-0">
+                      <h4 className={`font-semibold text-sm ${resource.color}`}>{resource.title}</h4>
+                      <p className="text-xs text-gray-600 truncate">{resource.description}</p>
                     </div>
                   </div>
                 </motion.button>
@@ -343,63 +448,34 @@ const CrisisSupport: React.FC<CrisisSupportProps> = ({ onClose, onSendMessage })
           </CardContent>
         </Card>
 
-        {/* Coping Strategies */}
+        {/* Quick Coping - Collapsed */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Quick Coping Strategies</CardTitle>
+          <CardHeader className="py-2 px-3">
+            <CardTitle className="text-sm">Quick Coping Strategies</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {copingStrategies.map((strategy, index) => (
-              <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-start">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                    <span className="text-sm font-semibold text-blue-600">{index + 1}</span>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-800">{strategy.title}</h4>
-                    <p className="text-sm text-gray-600 mt-1">{strategy.description}</p>
+          <CardContent className="px-3 pb-3">
+            <div className="grid grid-cols-2 gap-2">
+              {copingStrategies.map((strategy, index) => (
+                <div key={index} className="p-2 bg-gray-50 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+                      <span className="text-xs font-semibold text-blue-600">{index + 1}</span>
+                    </div>
+                    <span className="text-xs font-medium text-gray-800 truncate">{strategy.title}</span>
                   </div>
                 </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Safety Planning */}
-        <Card className="border-green-200 bg-green-50">
-          <CardHeader>
-            <CardTitle className="text-base text-green-800">Create a Safety Plan</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 text-sm text-green-700">
-              <p>• Identify your warning signs</p>
-              <p>• List coping strategies that help</p>
-              <p>• Contact people who can support you</p>
-              <p>• Remove or secure harmful items</p>
-              <p>• Know who to call in crisis</p>
+              ))}
             </div>
-            <Button 
-              onClick={() => onSendMessage('I would like help creating a safety plan for managing crisis situations.')}
-              className="w-full mt-3 bg-green-600 text-white hover:bg-green-700"
-            >
-              Get Help Creating Safety Plan
-            </Button>
           </CardContent>
         </Card>
       </div>
 
-      <div className="flex gap-2 mt-4">
+      <div className="pt-3 flex-shrink-0 border-t border-gray-100">
         <Button 
           onClick={onClose}
-          className="flex-1 bg-gray-200 text-gray-700 hover:bg-gray-300"
+          className="w-full bg-gray-200 text-gray-700 hover:bg-gray-300"
         >
-          Close
-        </Button>
-        <Button 
-          onClick={() => onSendMessage('I need ongoing support and would like to speak with a counselor about my mental health.')}
-          className="flex-1 bg-blue-600 text-white hover:bg-blue-700"
-        >
-          Request Counselor
+          ← Back to Chat
         </Button>
       </div>
     </div>

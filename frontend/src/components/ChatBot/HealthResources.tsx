@@ -104,8 +104,10 @@ Anxiety is a normal stress response, but when it becomes excessive or persistent
 - Thoughts of self-harm occur
 
 ## Campus Resources:
-- Counseling Center: +91-175-239-3000
-- Crisis Line: Available 24/7
+- TICC Counseling: G-Block 104-105
+- Dr. Sonam Dullat: sonam.dullat@thapar.edu
+- Ms. Sukhpreet Kaur: sukhpreet.kaur@thapar.edu
+- TIET Toll-Free: 1800 202 4100
 - Peer Support Groups: Weekly meetings
 - Stress Management Workshops: Monthly sessions`
     },
@@ -161,9 +163,11 @@ Depression is more than feeling sad - it's a serious mental health condition tha
 5. Practice self-compassion
 
 ## Crisis Resources:
-- National Suicide Prevention Lifeline: 988
-- Crisis Text Line: Text HOME to 741741
-- Campus Emergency: +91-175-239-3000
+- TIET Toll-Free: 1800 202 4100
+- TIET Ambulance: +91 8288008122
+- iCall (TISS): 9152987821
+- Vandrevala Foundation: 1860-2662-345
+- TICC: G-Block 104-105
 
 Remember: Depression is treatable, and recovery is possible.`
     },
@@ -237,8 +241,10 @@ Stress is your body's response to challenges or demands. While some stress is no
 - You feel hopeless or anxious constantly
 
 ## Campus Resources:
+- TICC Counseling: G-Block 104-105
+- Dr. Sonam Dullat: sonam.dullat@thapar.edu
+- Ms. Sukhpreet Kaur: sukhpreet.kaur@thapar.edu
 - Academic Success Center
-- Counseling Services
 - Stress Management Workshops
 - Peer Tutoring Programs
 - Recreation Center`
@@ -337,6 +343,7 @@ Proper nutrition fuels your brain, supports immune function, and maintains energ
 - Hair loss or brittle nails
 
 ## Campus Resources:
+- TIET Health Centre: 1800 202 4100
 - Dining Services Nutritionist
 - Health Center Nutrition Counseling
 - Cooking Classes
@@ -450,7 +457,8 @@ Proper nutrition fuels your brain, supports immune function, and maintains energ
 - Use proper form to prevent injury
 
 ## Campus Resources:
-- Recreation Center
+- TIET Sports Complex
+- Campus Gym
 - Fitness Classes
 - Personal Training Services
 - Intramural Sports
@@ -588,8 +596,8 @@ Proper nutrition fuels your brain, supports immune function, and maintains energ
 - **Aromatherapy**: Lavender essential oil
 
 ## Campus Resources:
-- Health Center Sleep Clinic
-- Counseling Services (for sleep-related anxiety)
+- TIET Health Centre: 1800 202 4100
+- TICC Counseling (for sleep-related anxiety): G-Block 104-105
 - Stress Management Workshops
 - Quiet Study Spaces
 - 24-hour Library (for schedule flexibility)`

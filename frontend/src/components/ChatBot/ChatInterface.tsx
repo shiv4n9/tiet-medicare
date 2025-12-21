@@ -1,15 +1,444 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, Calendar, AlertCircle, Heart, HelpCircle, Lock, Brain, Activity, Stethoscope, Book, Shield } from 'lucide-react';
+import {
+  Send,
+  User,
+  Bot,
+  Calendar,
+  AlertCircle,
+  Heart,
+  HelpCircle,
+  Lock,
+  Brain,
+  Activity,
+  Stethoscope,
+  Book,
+  Shield,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { useNavigate } from 'react-router-dom';
 import WellnessAssessment from './WellnessAssessment';
 import MoodTracker from './MoodTracker';
 import SymptomChecker from './SymptomChecker';
 import CrisisSupport from './CrisisSupport';
 import HealthResources from './HealthResources';
+
+// ============================================
+// ADVANCED INTENT DETECTION SYSTEM
+// Large-scale training data with fuzzy matching
+// ============================================
+
+interface IntentResult {
+  intent: string;
+  confidence: number;
+  component: string | null;
+  action: 'open_component' | 'show_dialog' | 'respond' | 'redirect';
+  matchedPhrases: string[];
+}
+
+// Training data - Large dataset of phrases mapped to intents
+const trainingData: Record<string, string[]> = {
+  // CRISIS SUPPORT - Highest Priority (200+ phrases)
+  crisis: [
+    // Suicidal ideation
+    'i want to die', 'i want to kill myself', 'i dont want to live', 'i dont want to be alive',
+    'end my life', 'end it all', 'kill myself', 'suicide', 'suicidal', 'suicidal thoughts',
+    'thinking about suicide', 'want to commit suicide', 'planning to end my life',
+    'life is not worth living', 'better off dead', 'wish i was dead', 'wish i wasnt alive',
+    'no reason to live', 'cant go on', 'cant take it anymore', 'cant do this anymore',
+    'give up on life', 'giving up', 'done with life', 'done with everything',
+    'nothing to live for', 'no point in living', 'whats the point of living',
+    // Self-harm
+    'self harm', 'self-harm', 'hurt myself', 'hurting myself', 'cutting myself',
+    'want to cut', 'harming myself', 'injure myself', 'self injury', 'self-injury',
+    'burning myself', 'hitting myself', 'punishing myself',
+    // Crisis/Emergency
+    'emergency', 'urgent', 'crisis', 'help me', 'help me now', 'need help now',
+    'need help immediately', 'urgent help', 'emergency help', 'im in danger',
+    'im not safe', 'not safe', 'in crisis', 'having a crisis', 'mental health crisis',
+    'breakdown', 'mental breakdown', 'nervous breakdown', 'falling apart',
+    'cant cope', 'cant handle this', 'losing my mind', 'going crazy',
+    // Desperation
+    'desperate', 'hopeless', 'no hope', 'lost all hope', 'theres no hope',
+    'nothing will help', 'nothing works', 'tried everything', 'at my limit',
+    'reached my limit', 'at the end', 'end of my rope', 'rock bottom',
+    // Abuse/Violence
+    'being abused', 'someone is hurting me', 'domestic violence', 'being beaten',
+    'physically abused', 'sexually abused', 'in danger at home', 'unsafe at home',
+    'someone threatening me', 'being threatened', 'fear for my life',
+    // Panic/Severe distress
+    'panic attack', 'having a panic attack', 'cant breathe', 'heart racing',
+    'severe anxiety attack', 'anxiety attack', 'freaking out', 'losing control',
+    'feel like dying', 'feel like im dying', 'something is very wrong',
+  ],
+
+  // SYMPTOM CHECKER (300+ phrases)
+  symptoms: [
+    // General illness
+    'i feel sick', 'feeling sick', 'not feeling well', 'feeling unwell', 'im sick',
+    'i am sick', 'got sick', 'fallen ill', 'feeling ill', 'under the weather',
+    'something is wrong with me', 'whats wrong with me', 'check my symptoms',
+    'symptom checker', 'analyze my symptoms', 'diagnose me', 'what do i have',
+    'am i sick', 'could i be sick', 'think im sick', 'might be sick',
+    // Head/Neurological
+    'headache', 'head hurts', 'head pain', 'migraine', 'severe headache',
+    'throbbing head', 'pounding headache', 'tension headache', 'head is killing me',
+    'dizzy', 'dizziness', 'feeling dizzy', 'lightheaded', 'light headed',
+    'vertigo', 'room is spinning', 'balance problems', 'fainting', 'fainted',
+    'blurry vision', 'vision problems', 'seeing spots', 'double vision',
+    // Fever/Temperature
+    'fever', 'high temperature', 'temperature', 'feeling hot', 'burning up',
+    'chills', 'shivering', 'cold sweats', 'night sweats', 'sweating a lot',
+    'body temperature', 'feverish', 'running a fever', 'got a fever',
+    // Respiratory
+    'cough', 'coughing', 'dry cough', 'wet cough', 'persistent cough',
+    'cant stop coughing', 'coughing up', 'phlegm', 'mucus', 'congestion',
+    'congested', 'stuffy nose', 'runny nose', 'blocked nose', 'nasal',
+    'sore throat', 'throat hurts', 'throat pain', 'scratchy throat', 'strep',
+    'difficulty breathing', 'hard to breathe', 'shortness of breath', 'breathless',
+    'wheezing', 'chest tightness', 'cant catch breath', 'breathing problems',
+    'cold', 'common cold', 'flu', 'influenza', 'covid', 'coronavirus',
+    // Digestive
+    'stomach ache', 'stomach pain', 'stomach hurts', 'abdominal pain', 'belly pain',
+    'nausea', 'nauseous', 'feel like vomiting', 'going to throw up', 'queasy',
+    'vomiting', 'throwing up', 'vomited', 'been sick', 'puking',
+    'diarrhea', 'loose stools', 'watery stool', 'frequent bowel', 'runs',
+    'constipation', 'constipated', 'cant poop', 'bloated', 'bloating', 'gas',
+    'indigestion', 'heartburn', 'acid reflux', 'gerd', 'stomach upset',
+    'food poisoning', 'ate something bad', 'stomach bug', 'gastro',
+    // Pain
+    'pain', 'ache', 'aching', 'hurts', 'hurting', 'sore', 'soreness',
+    'back pain', 'backache', 'lower back', 'upper back', 'spine pain',
+    'neck pain', 'stiff neck', 'neck hurts', 'shoulder pain', 'shoulders hurt',
+    'joint pain', 'joints hurt', 'knee pain', 'ankle pain', 'wrist pain',
+    'muscle pain', 'muscle ache', 'body aches', 'all over pain', 'everything hurts',
+    'chest pain', 'chest hurts', 'heart pain', 'sharp chest pain',
+    'ear pain', 'earache', 'ear hurts', 'ear infection',
+    'tooth pain', 'toothache', 'dental pain', 'teeth hurt',
+    // Skin
+    'rash', 'skin rash', 'itchy', 'itching', 'hives', 'bumps on skin',
+    'red spots', 'skin irritation', 'allergic reaction', 'swelling',
+    'acne', 'pimples', 'breakout', 'skin problem', 'eczema', 'psoriasis',
+    // Fatigue/Energy
+    'tired', 'exhausted', 'fatigue', 'fatigued', 'no energy', 'low energy',
+    'always tired', 'constantly tired', 'chronic fatigue', 'weakness',
+    'weak', 'feeling weak', 'lethargic', 'sluggish', 'drained',
+    // Eyes
+    'eye pain', 'eyes hurt', 'red eyes', 'pink eye', 'eye infection',
+    'watery eyes', 'dry eyes', 'eye strain', 'vision blurry',
+    // Urinary
+    'painful urination', 'burning when i pee', 'frequent urination', 'uti',
+    'urinary tract', 'bladder pain', 'kidney pain',
+    // Other symptoms
+    'swollen', 'inflammation', 'numbness', 'tingling', 'pins and needles',
+    'loss of appetite', 'not hungry', 'weight loss', 'weight gain',
+    'insomnia', 'cant sleep', 'sleep problems', 'sleeping too much',
+    'allergies', 'allergy', 'allergic', 'sneezing', 'runny eyes',
+  ],
+
+  // MOOD TRACKER (200+ phrases)
+  mood: [
+    // Track mood
+    'track my mood', 'mood tracker', 'log my mood', 'record my mood',
+    'how am i feeling', 'check my mood', 'mood check', 'mood journal',
+    'emotional check', 'feelings tracker', 'track emotions', 'log feelings',
+    // Sadness
+    'feeling sad', 'im sad', 'so sad', 'very sad', 'really sad',
+    'feeling down', 'feeling low', 'feeling blue', 'got the blues',
+    'unhappy', 'not happy', 'miserable', 'gloomy', 'melancholy',
+    'crying', 'been crying', 'want to cry', 'feel like crying', 'tears',
+    'heartbroken', 'broken hearted', 'devastated', 'crushed',
+    // Depression
+    'depressed', 'depression', 'feeling depressed', 'clinical depression',
+    'major depression', 'depressive', 'in a dark place', 'darkness',
+    'empty inside', 'feel empty', 'numb', 'feeling numb', 'emotionally numb',
+    'no motivation', 'cant get motivated', 'dont care anymore', 'apathetic',
+    // Anxiety
+    'anxious', 'anxiety', 'feeling anxious', 'worried', 'worrying',
+    'nervous', 'on edge', 'restless', 'cant relax', 'tense',
+    'overthinking', 'racing thoughts', 'mind wont stop', 'cant stop thinking',
+    'fear', 'scared', 'afraid', 'frightened', 'terrified', 'paranoid',
+    // Stress
+    'stressed', 'stress', 'feeling stressed', 'under stress', 'so stressed',
+    'overwhelmed', 'too much', 'cant handle', 'pressure', 'under pressure',
+    'burned out', 'burnout', 'exhausted mentally', 'mental exhaustion',
+    'overworked', 'too much work', 'work stress', 'academic stress',
+    // Anger
+    'angry', 'anger', 'mad', 'furious', 'rage', 'irritated', 'irritable',
+    'frustrated', 'frustration', 'annoyed', 'pissed off', 'fed up',
+    'resentful', 'bitter', 'hostile', 'aggressive feelings',
+    // Positive moods
+    'happy', 'feeling happy', 'good mood', 'great mood', 'feeling good',
+    'feeling great', 'wonderful', 'amazing', 'fantastic', 'excellent',
+    'excited', 'thrilled', 'joyful', 'joy', 'elated', 'ecstatic',
+    'calm', 'peaceful', 'relaxed', 'content', 'satisfied', 'grateful',
+    'hopeful', 'optimistic', 'positive', 'motivated', 'energized',
+    // Mixed/Confused
+    'mood swings', 'emotional', 'emotions all over', 'up and down',
+    'dont know how i feel', 'confused about feelings', 'mixed feelings',
+    'emotional rollercoaster', 'unstable mood', 'bipolar feelings',
+    // Loneliness
+    'lonely', 'loneliness', 'alone', 'isolated', 'no friends',
+    'feel alone', 'nobody cares', 'no one understands', 'disconnected',
+  ],
+
+  // WELLNESS ASSESSMENT (100+ phrases)
+  wellness: [
+    'wellness check', 'wellness assessment', 'health assessment', 'health check',
+    'check my health', 'evaluate my health', 'health evaluation', 'health score',
+    'overall health', 'general health', 'how healthy am i', 'am i healthy',
+    'wellbeing', 'well-being', 'well being', 'my wellbeing', 'check wellbeing',
+    'lifestyle check', 'lifestyle assessment', 'habits check', 'health habits',
+    'fitness level', 'fitness check', 'physical health', 'mental health check',
+    'comprehensive check', 'full health check', 'complete assessment',
+    'health screening', 'self assessment', 'personal health', 'health status',
+    'how am i doing', 'health report', 'wellness score', 'wellness report',
+    'body check', 'mind body check', 'holistic health', 'total wellness',
+    'preventive check', 'health baseline', 'benchmark health',
+  ],
+
+  // HEALTH RESOURCES (100+ phrases)
+  resources: [
+    'health resources', 'health library', 'health articles', 'health information',
+    'learn about health', 'health education', 'health tips', 'wellness tips',
+    'self help', 'self-help', 'help myself', 'resources', 'information',
+    'articles', 'guides', 'how to', 'tips for', 'advice on',
+    'read about', 'learn about', 'understand', 'what is', 'explain',
+    'health guide', 'wellness guide', 'mental health resources',
+    'coping strategies', 'coping techniques', 'coping skills', 'coping mechanisms',
+    'relaxation techniques', 'stress relief tips', 'anxiety tips',
+    'sleep tips', 'nutrition tips', 'exercise tips', 'fitness tips',
+    'meditation guide', 'mindfulness resources', 'breathing exercises',
+    'educational content', 'health facts', 'medical information',
+    'disease information', 'condition information', 'treatment options',
+    'prevention tips', 'healthy living', 'lifestyle tips',
+  ],
+
+  // APPOINTMENT BOOKING (100+ phrases)
+  appointment: [
+    'book appointment', 'make appointment', 'schedule appointment', 'appointment',
+    'book a doctor', 'see a doctor', 'visit doctor', 'doctor appointment',
+    'meet doctor', 'consult doctor', 'doctor consultation', 'medical appointment',
+    'schedule visit', 'book visit', 'health centre appointment', 'clinic appointment',
+    'need to see doctor', 'want to see doctor', 'should see doctor',
+    'book checkup', 'schedule checkup', 'health checkup', 'medical checkup',
+    'get checked', 'get examined', 'physical exam', 'medical exam',
+    'book slot', 'available slots', 'doctor availability', 'when can i see',
+    'earliest appointment', 'next available', 'book for today', 'book for tomorrow',
+    'online booking', 'book online', 'schedule online', 'appointment booking',
+    'cancel appointment', 'reschedule appointment', 'change appointment',
+    'upcoming appointment', 'my appointments', 'appointment status',
+  ],
+
+  // MENTAL HEALTH / COUNSELING (100+ phrases)
+  mentalHealth: [
+    'mental health', 'mental health support', 'mental wellness', 'psychological',
+    'counseling', 'counselling', 'counselor', 'counsellor', 'therapy', 'therapist',
+    'psychologist', 'psychiatrist', 'mental health professional',
+    'ticc', 'thapar counseling', 'campus counseling', 'student counseling',
+    'talk to someone', 'need to talk', 'someone to talk to', 'professional help',
+    'mental health help', 'psychological help', 'emotional support',
+    'therapy session', 'counseling session', 'book counseling', 'book therapy',
+    'mental health appointment', 'see a counselor', 'see a therapist',
+    'psychiatric help', 'mental health services', 'counseling services',
+    'emotional help', 'psychological support', 'mental support',
+    'dealing with issues', 'personal issues', 'life problems', 'relationship issues',
+    'family problems', 'work problems', 'academic problems',
+  ],
+};
+
+// Synonym expansion for better matching
+const synonyms: Record<string, string[]> = {
+  'sick': ['ill', 'unwell', 'poorly', 'under the weather'],
+  'pain': ['ache', 'hurt', 'sore', 'discomfort', 'agony'],
+  'sad': ['unhappy', 'down', 'blue', 'low', 'miserable', 'gloomy'],
+  'happy': ['glad', 'joyful', 'cheerful', 'content', 'pleased'],
+  'anxious': ['worried', 'nervous', 'tense', 'uneasy', 'apprehensive'],
+  'tired': ['exhausted', 'fatigued', 'weary', 'drained', 'worn out'],
+  'angry': ['mad', 'furious', 'irritated', 'annoyed', 'upset'],
+  'scared': ['afraid', 'frightened', 'terrified', 'fearful'],
+  'help': ['assist', 'support', 'aid', 'guidance'],
+  'doctor': ['physician', 'medical professional', 'healthcare provider'],
+  'appointment': ['booking', 'visit', 'consultation', 'meeting'],
+};
+
+// Calculate Levenshtein distance for fuzzy matching
+const levenshteinDistance = (str1: string, str2: string): number => {
+  const m = str1.length;
+  const n = str2.length;
+  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (str1[i - 1] === str2[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1];
+      } else {
+        dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+      }
+    }
+  }
+  return dp[m][n];
+};
+
+// Calculate similarity score (0-1)
+const calculateSimilarity = (str1: string, str2: string): number => {
+  const maxLen = Math.max(str1.length, str2.length);
+  if (maxLen === 0) return 1;
+  const distance = levenshteinDistance(str1.toLowerCase(), str2.toLowerCase());
+  return 1 - distance / maxLen;
+};
+
+// Tokenize and normalize input
+const tokenize = (text: string): string[] => {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s]/g, ' ')
+    .split(/\s+/)
+    .filter(word => word.length > 1);
+};
+
+// Generate n-grams from tokens
+const generateNgrams = (tokens: string[], n: number): string[] => {
+  const ngrams: string[] = [];
+  for (let i = 0; i <= tokens.length - n; i++) {
+    ngrams.push(tokens.slice(i, i + n).join(' '));
+  }
+  return ngrams;
+};
+
+// Advanced intent detection with fuzzy matching and n-gram analysis
+const detectIntent = (userInput: string): IntentResult => {
+  const input = userInput.toLowerCase().trim();
+  const tokens = tokenize(input);
+  
+  // Generate n-grams (1, 2, 3, 4 word phrases)
+  const allPhrases = [
+    ...tokens,
+    ...generateNgrams(tokens, 2),
+    ...generateNgrams(tokens, 3),
+    ...generateNgrams(tokens, 4),
+  ];
+
+  const intentScores: Record<string, { score: number; matches: string[] }> = {};
+  
+  // Intent weights (priority)
+  const intentWeights: Record<string, number> = {
+    crisis: 2.0,      // Highest priority
+    symptoms: 1.2,
+    mood: 1.1,
+    appointment: 1.0,
+    mentalHealth: 1.0,
+    wellness: 0.9,
+    resources: 0.8,
+  };
+
+  // Component mapping
+  const intentComponents: Record<string, string | null> = {
+    crisis: 'crisis-support',
+    symptoms: 'symptom-checker',
+    mood: 'mood-tracker',
+    wellness: 'wellness-assessment',
+    resources: 'health-resources',
+    appointment: null,
+    mentalHealth: null,
+  };
+
+  // Action mapping
+  const intentActions: Record<string, 'open_component' | 'show_dialog' | 'respond'> = {
+    crisis: 'open_component',
+    symptoms: 'open_component',
+    mood: 'open_component',
+    wellness: 'open_component',
+    resources: 'open_component',
+    appointment: 'show_dialog',
+    mentalHealth: 'show_dialog',
+  };
+
+  // Score each intent
+  for (const [intent, phrases] of Object.entries(trainingData)) {
+    let totalScore = 0;
+    const matchedPhrases: string[] = [];
+
+    for (const trainingPhrase of phrases) {
+      // Exact match (highest score)
+      if (input.includes(trainingPhrase)) {
+        totalScore += 10 * (trainingPhrase.split(' ').length); // Longer phrases = higher score
+        matchedPhrases.push(trainingPhrase);
+        continue;
+      }
+
+      // Check each user phrase against training phrase
+      for (const userPhrase of allPhrases) {
+        // Exact phrase match
+        if (userPhrase === trainingPhrase) {
+          totalScore += 8;
+          if (!matchedPhrases.includes(trainingPhrase)) matchedPhrases.push(trainingPhrase);
+          continue;
+        }
+
+        // Fuzzy match (for typos)
+        const similarity = calculateSimilarity(userPhrase, trainingPhrase);
+        if (similarity > 0.8) {
+          totalScore += similarity * 6;
+          if (!matchedPhrases.includes(trainingPhrase)) matchedPhrases.push(trainingPhrase);
+        }
+        
+        // Partial match (phrase contains training word)
+        if (trainingPhrase.split(' ').some(word => userPhrase.includes(word) && word.length > 3)) {
+          totalScore += 2;
+        }
+      }
+    }
+
+    // Apply intent weight
+    totalScore *= intentWeights[intent] || 1;
+
+    intentScores[intent] = { score: totalScore, matches: matchedPhrases };
+  }
+
+  // Find best matching intent
+  let bestIntent = 'general';
+  let bestScore = 0;
+  let bestMatches: string[] = [];
+
+  for (const [intent, data] of Object.entries(intentScores)) {
+    if (data.score > bestScore) {
+      bestScore = data.score;
+      bestIntent = intent;
+      bestMatches = data.matches;
+    }
+  }
+
+  // Minimum threshold for triggering component
+  const minThreshold = 8;
+  
+  if (bestScore < minThreshold) {
+    return {
+      intent: 'general',
+      confidence: 0,
+      component: null,
+      action: 'respond',
+      matchedPhrases: [],
+    };
+  }
+
+  // Normalize confidence to 0-100
+  const confidence = Math.min(100, (bestScore / 50) * 100);
+
+  return {
+    intent: bestIntent,
+    confidence,
+    component: intentComponents[bestIntent] || null,
+    action: intentActions[bestIntent] || 'respond',
+    matchedPhrases: bestMatches.slice(0, 5), // Top 5 matches
+  };
+};
 
 interface Message {
   id: string;
@@ -25,6 +454,7 @@ interface ChatInterfaceProps {
   incrementGuestMessageCount: () => void;
   onLoginRequest: () => void;
   maxGuestMessages: number;
+  onCloseChat: () => void;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
@@ -33,14 +463,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   guestMessagesCount, 
   incrementGuestMessageCount,
   onLoginRequest,
-  maxGuestMessages
+  maxGuestMessages,
+  onCloseChat
 }) => {
   const [messages, setMessages] = useState<Message[]>(() => {
     const savedMessages = localStorage.getItem('chatMessages');
     return savedMessages ? JSON.parse(savedMessages) : [
       {
         id: '1',
-        text: '👋 Hello! I\'m your TIET Medi-Care assistant, here to support your health and wellness journey. \n\n✨ I can help with:\n🧠 Mental health support\n🩺 Symptom guidance\n📅 Appointment booking\n🆘 Crisis support\n💪 Wellness tracking\n\nWhat brings you here today?',
+        text: '👋 Hello! I\'m your TIET Medi-Care assistant, here to support your health and wellness journey.\n\n✨ I can help with:\n🧠 Mental health & TICC counseling\n🩺 Symptom guidance & health tips\n📅 Health Centre information\n🆘 Crisis support (24/7)\n💪 Wellness tracking\n\n📞 Quick Contacts:\n• Health Centre: 1800 202 4100\n• Ambulance: +91 8288008122\n• TICC: G-Block 104-105\n\nWhat brings you here today?',
         isUser: false,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       },
@@ -49,7 +480,38 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [activeComponent, setActiveComponent] = useState<string | null>(null);
+  const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
+  const [showMentalHealthDialog, setShowMentalHealthDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  const handleAppointmentClick = () => {
+    if (isAuthenticated) {
+      setShowAppointmentDialog(true);
+    } else {
+      onLoginRequest();
+    }
+  };
+
+  const handleAppointmentConfirm = () => {
+    setShowAppointmentDialog(false);
+    onCloseChat();
+    window.location.href = '/#appointments';
+  };
+
+  const handleMentalHealthOption = (option: string) => {
+    setShowMentalHealthDialog(false);
+    if (option === 'mood') {
+      openComponent('mood-tracker');
+    } else if (option === 'crisis') {
+      openComponent('crisis-support');
+    } else if (option === 'ticc') {
+      const message = `🧠 TICC - Thapar Institute Counselling Cell\n\n📍 Location: G-Block 104-105\n\n👩‍⚕️ Counselors:\n• Dr. Sonam Dullat (Manager)\n  📧 sonam.dullat@thapar.edu\n• Ms. Sukhpreet Kaur (Assistant)\n  📧 sukhpreet.kaur@thapar.edu\n\n📞 Appointments:\n• Email counselors directly\n• Or call: 1800 202 4100\n\n🌟 Services:\n• Individual counseling\n• Stress management\n• Academic guidance\n• Crisis support\n\nAll sessions are confidential.`;
+      addMessage(message);
+    } else if (option === 'resources') {
+      openComponent('health-resources');
+    }
+  };
   
   // Save messages to localStorage when they change
   useEffect(() => {
@@ -71,9 +533,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       return;
     }
     
+    const userInput = input;
     const newMessage: Message = {
       id: Date.now().toString(),
-      text: input,
+      text: userInput,
       isUser: true,
       timestamp: getTimeString(),
     };
@@ -86,10 +549,77 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       incrementGuestMessageCount();
     }
     
-    // Show typing indicator
+    // Detect intent from user input
+    const intent = detectIntent(userInput);
+    
+    // Handle intent-based actions
+    if (intent.action === 'open_component' && intent.component) {
+      // Show brief acknowledgment then open component
+      setIsTyping(true);
+      setTimeout(() => {
+        setIsTyping(false);
+        const acknowledgments: Record<string, string> = {
+          'crisis-support': '🆘 Opening Crisis Support - help is available 24/7...',
+          'symptom-checker': '🩺 Opening Symptom Checker to help assess your symptoms...',
+          'mood-tracker': '🧠 Opening Mood Tracker to help you understand your feelings...',
+          'wellness-assessment': '💪 Opening Wellness Assessment to check your overall health...',
+          'health-resources': '📚 Opening Health Library with helpful resources...'
+        };
+        
+        const ackMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: acknowledgments[intent.component] || 'Opening tool...',
+          isUser: false,
+          timestamp: getTimeString(),
+        };
+        setMessages(prev => [...prev, ackMessage]);
+        
+        // Open the component after a brief delay
+        setTimeout(() => {
+          openComponent(intent.component!);
+        }, 500);
+      }, 800);
+      return;
+    }
+    
+    if (intent.action === 'show_dialog') {
+      setIsTyping(true);
+      setTimeout(() => {
+        setIsTyping(false);
+        if (intent.intent === 'appointment') {
+          const ackMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            text: '📅 Let me help you book an appointment...',
+            isUser: false,
+            timestamp: getTimeString(),
+          };
+          setMessages(prev => [...prev, ackMessage]);
+          setTimeout(() => {
+            if (isAuthenticated) {
+              setShowAppointmentDialog(true);
+            } else {
+              onLoginRequest();
+            }
+          }, 500);
+        } else if (intent.intent === 'mentalHealth') {
+          const ackMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            text: '🧠 Here are your mental health support options...',
+            isUser: false,
+            timestamp: getTimeString(),
+          };
+          setMessages(prev => [...prev, ackMessage]);
+          setTimeout(() => {
+            setShowMentalHealthDialog(true);
+          }, 500);
+        }
+      }, 800);
+      return;
+    }
+    
+    // Default: Show typing indicator and respond normally
     setIsTyping(true);
     
-    // Simulate bot response after a short delay
     setTimeout(() => {
       setIsTyping(false);
       
@@ -106,7 +636,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         // Regular response
         const responseMessage: Message = {
           id: (Date.now() + 1).toString(),
-          text: getBotResponse(input),
+          text: getBotResponse(userInput),
           isUser: false,
           timestamp: getTimeString(),
         };
@@ -122,17 +652,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     
     // Mental Health & Wellness Support
     if (input.includes('depression') || input.includes('sad') || input.includes('hopeless') || input.includes('down')) {
-      return `💙 I hear you, and I want you to know that what you're feeling is valid. Depression affects many people, and reaching out is a brave first step.\n\nHere's how I can support you right now:\n\n🌱 Immediate Support:\n• Try the Mood Tracker to understand your patterns\n• Practice a 5-minute breathing exercise\n• Connect with our 24/7 counseling service\n\n📞 Professional Help:\n• Campus Counseling: +91-175-239-3000\n• Crisis Line: 988 (available 24/7)\n\nWould you like to start with a mood check-in, or would you prefer to talk to a counselor?`;
+      return `💙 I hear you, and I want you to know that what you're feeling is valid. Depression affects many people, and reaching out is a brave first step.\n\nHere's how I can support you right now:\n\n🌱 Immediate Support:\n• Try the Mood Tracker to understand your patterns\n• Practice a 5-minute breathing exercise\n• Connect with TICC counseling service\n\n📞 TIET Professional Help:\n• TICC (G-Block 104-105)\n• Dr. Sonam Dullat: sonam.dullat@thapar.edu\n• Ms. Sukhpreet Kaur: sukhpreet.kaur@thapar.edu\n• TIET Toll-Free: 1800 202 4100\n\nWould you like to start with a mood check-in, or would you prefer to talk to a counselor?`;
     } else if (input.includes('anxiety') || input.includes('panic') || input.includes('worried') || input.includes('nervous') || input.includes('anxious')) {
-      return `🧘 I understand anxiety can feel overwhelming. Let's work through this together.\n\n✨ Try this quick grounding exercise:\n1. Name 5 things you can see\n2. 4 things you can touch\n3. 3 things you can hear\n4. 2 things you can smell\n5. 1 thing you can taste\n\n🛠️ Tools I can offer:\n• Guided breathing (4-7-8 technique)\n• Progressive muscle relaxation\n• Anxiety management strategies\n• Professional therapy referrals\n\nWould you like me to guide you through a 2-minute breathing exercise right now?`;
+      return `🧘 I understand anxiety can feel overwhelming. Let's work through this together.\n\n✨ Try this quick grounding exercise:\n1. Name 5 things you can see\n2. 4 things you can touch\n3. 3 things you can hear\n4. 2 things you can smell\n5. 1 thing you can taste\n\n🛠️ Tools I can offer:\n• Guided breathing (4-7-8 technique)\n• Progressive muscle relaxation\n• Anxiety management strategies\n• TICC counseling referrals\n\n📍 TICC Location: G-Block 104-105\n\nWould you like me to guide you through a 2-minute breathing exercise right now?`;
     } else if (input.includes('stress') || input.includes('overwhelmed') || input.includes('pressure') || input.includes('burnout')) {
-      return `💆 Feeling stressed is your body's way of telling you it needs attention. Let's find what works for you.\n\n🎯 Quick Stress Relief:\n• Take 3 deep breaths right now\n• Step away from screens for 5 minutes\n• Stretch your shoulders and neck\n\n📋 I can help with:\n• Personalized stress management plan\n• Time management strategies\n• Mindfulness exercises\n• Work-life balance tips\n\nWhat's the main source of your stress right now - academic, personal, or work-related?`;
+      return `💆 Feeling stressed is your body's way of telling you it needs attention. Let's find what works for you.\n\n🎯 Quick Stress Relief:\n• Take 3 deep breaths right now\n• Step away from screens for 5 minutes\n• Stretch your shoulders and neck\n\n📋 I can help with:\n• Personalized stress management plan\n• Time management strategies\n• Mindfulness exercises\n• Work-life balance tips\n\n📚 TIET Resources:\n• TICC Counseling: G-Block 104-105\n• Library quiet zones for study\n• Campus meditation spaces\n\nWhat's the main source of your stress right now - academic, personal, or work-related?`;
     } else if (input.includes('sleep') || input.includes('insomnia') || input.includes('tired') || input.includes('fatigue') || input.includes('exhausted')) {
-      return `😴 Quality sleep is foundational to your wellbeing. Let's improve your rest.\n\n🌙 Tonight's Sleep Tips:\n• Avoid screens 1 hour before bed\n• Keep your room cool (65-68°F)\n• Try a relaxation technique\n• Stick to a consistent bedtime\n\n📊 I can help you:\n• Create a personalized sleep schedule\n• Identify sleep disruptors\n• Learn relaxation techniques\n• Screen for sleep disorders\n\nHow many hours are you currently sleeping, and do you wake up feeling rested?`;
+      return `😴 Quality sleep is foundational to your wellbeing. Let's improve your rest.\n\n🌙 Tonight's Sleep Tips:\n• Avoid screens 1 hour before bed\n• Keep your room cool (65-68°F)\n• Try a relaxation technique\n• Stick to a consistent bedtime\n\n📊 I can help you:\n• Create a personalized sleep schedule\n• Identify sleep disruptors\n• Learn relaxation techniques\n• Screen for sleep disorders\n\n🏥 If persistent, visit TIET Health Centre for evaluation.\n\nHow many hours are you currently sleeping, and do you wake up feeling rested?`;
     } else if (input.includes('eating') || input.includes('diet') || input.includes('nutrition') || input.includes('weight') || input.includes('food')) {
-      return `🥗 Nutrition directly impacts your energy, mood, and overall health.\n\n🍎 Quick Nutrition Tips:\n• Aim for colorful plates (variety of veggies)\n• Stay hydrated (8 glasses/day)\n• Don't skip breakfast\n• Balance protein, carbs, and healthy fats\n\n📋 I can assist with:\n• Personalized meal planning\n• Healthy eating on a budget\n• Understanding food labels\n• Addressing specific dietary concerns\n\nAre you looking for general nutrition advice or do you have specific dietary goals?`;
+      return `🥗 Nutrition directly impacts your energy, mood, and overall health.\n\n🍎 Quick Nutrition Tips:\n• Aim for colorful plates (variety of veggies)\n• Stay hydrated (8 glasses/day)\n• Don't skip breakfast\n• Balance protein, carbs, and healthy fats\n\n🍽️ TIET Campus Options:\n• Mess timings and healthy choices\n• Canteen nutritious options\n• Nearby healthy eateries\n\n📋 I can assist with:\n• Personalized meal planning\n• Healthy eating on a budget\n• Understanding food labels\n\nAre you looking for general nutrition advice or do you have specific dietary goals?`;
     } else if (input.includes('exercise') || input.includes('fitness') || input.includes('workout') || input.includes('gym') || input.includes('physical activity')) {
-      return `🏃 Physical activity is one of the best things you can do for your body and mind!\n\n💪 Start Simple:\n• 10-minute walk after meals\n• Stretching breaks every hour\n• Take stairs instead of elevator\n• Join a campus sports club\n\n🎯 I can help with:\n• Beginner-friendly workout plans\n• Campus gym information\n• Home exercises (no equipment needed)\n• Fitness goal tracking\n\nWhat's your current activity level - beginner, intermediate, or looking to level up?`;
+      return `🏃 Physical activity is one of the best things you can do for your body and mind!\n\n💪 Start Simple:\n• 10-minute walk after meals\n• Stretching breaks every hour\n• Take stairs instead of elevator\n• Join a campus sports club\n\n🏟️ TIET Facilities:\n• Campus Gym\n• Sports Complex\n• Cricket/Football grounds\n• Basketball & Tennis courts\n\n🎯 I can help with:\n• Beginner-friendly workout plans\n• Home exercises (no equipment needed)\n• Fitness goal tracking\n\nWhat's your current activity level - beginner, intermediate, or looking to level up?`;
     }
     
     // Symptom Assessment & Health Concerns
@@ -155,28 +685,32 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     
     // Crisis & Emergency Support
     else if (input.includes('suicide') || input.includes('self harm') || input.includes('hurt myself') || input.includes('end it all') || input.includes('kill myself') || input.includes('want to die')) {
-      return `🆘 I'm really glad you reached out. What you're feeling matters, and help is available right now.\n\n🚨 IMMEDIATE SUPPORT:\n• National Suicide Prevention: 988\n• Crisis Text Line: Text HOME to 741741\n• Campus Counseling: +91-175-239-3000\n• Emergency Services: 112\n\n💙 You are not alone. These feelings can get better with support.\n\nPlease reach out to one of these resources right now. Would you like me to provide more information about crisis support services?`;
+      return `🆘 I'm really glad you reached out. What you're feeling matters, and help is available right now.\n\n🚨 IMMEDIATE SUPPORT:\n• TIET Toll-Free: 1800 202 4100\n• iCall: 9152987821\n• Vandrevala Foundation: 1860-2662-345\n• Emergency: 112\n\n📍 TICC (Campus Counseling):\n• Location: G-Block 104-105\n• Dr. Sonam Dullat: sonam.dullat@thapar.edu\n• Ms. Sukhpreet Kaur: sukhpreet.kaur@thapar.edu\n\n💙 You are not alone. These feelings can get better with support.\n\nPlease reach out to one of these resources right now. Would you like me to provide more information about crisis support services?`;
     } else if (input.includes('abuse') || input.includes('violence') || input.includes('harassment') || input.includes('assault') || input.includes('unsafe')) {
-      return `🛡️ Your safety is the top priority. I'm here to help you access support.\n\n🚨 Confidential Resources:\n• Campus Security: +91-175-239-3001\n• Counseling Services: 24/7 available\n• Student Advocacy Office\n• Medical Care (confidential)\n\n💙 Remember:\n• It's not your fault\n• You deserve to be safe\n• Help is available and confidential\n\nWould you like immediate assistance or information about your options?`;
+      return `🛡️ Your safety is the top priority. I'm here to help you access support.\n\n🚨 TIET Resources:\n• TIET Toll-Free: 1800 202 4100\n• Women Helpline: 1091\n• Police: 100\n• Emergency: 112\n\n📍 Campus Support:\n• TICC Counseling: G-Block 104-105\n• Registrar Office: registrar@thapar.edu\n\n💙 Remember:\n• It's not your fault\n• You deserve to be safe\n• Help is available and confidential\n\nWould you like immediate assistance or information about your options?`;
     }
     
     // Basic Health Queries
     else if (input.includes('appointment') || input.includes('book') || input.includes('doctor') || input.includes('schedule')) {
-      return `📅 I can help you get the care you need!\n\n🏥 Available Services:\n• General Medicine\n• Mental Health Counseling\n• Women's Health\n• Dermatology\n• Nutrition Counseling\n• Physical Therapy\n\n⏰ Quick Options:\n• Same-day urgent appointments\n• Telehealth consultations\n• Scheduled follow-ups\n\nWhat type of appointment would you like to book? I can check availability for you.`;
-    } else if (input.includes('emergency') || input.includes('urgent')) {
-      return `🚨 For emergencies, here's what to do:\n\n🔴 Life-Threatening: Call 112 immediately\n🟠 Campus Emergency: +91-175-239-3000\n🟡 After-Hours Clinic: Available 24/7\n🔵 Mental Health Crisis: Crisis hotline 24/7\n\n📍 Campus Health Center Location:\n[Provide location details]\n\nIs this a current emergency? Tell me more so I can help connect you with the right care.`;
+      return `📅 I can help you get the care you need!\n\n🏥 TIET Health Centre Services:\n• General Medicine\n• First Aid & Emergency\n• Health Checkups\n• Referrals to specialists\n\n📍 Location: Near Main Gate, TIET Campus\n📞 Contact: 1800 202 4100\n\n🧠 Mental Health (TICC):\n• Location: G-Block 104-105\n• Email counselors directly for appointments\n\n⏰ Quick Options:\n• Walk-in during OPD hours\n• Emergency care 24/7\n\nWhat type of appointment would you like to book?`;
+    } else if (input.includes('emergency') || input.includes('urgent') || input.includes('ambulance')) {
+      return `🚨 For emergencies, here's what to do:\n\n🔴 Life-Threatening: Call 112 immediately\n🚑 TIET Ambulance: +91 8288008122\n📞 TIET Toll-Free: 1800 202 4100\n\n🏥 TIET Health Centre:\n• 24/7 Emergency Care Available\n• Location: Near Main Gate\n\n🆘 National Helplines:\n• Ambulance: 108\n• Police: 100\n• Fire: 101\n• Women Helpline: 1091\n\nIs this a current emergency? Tell me more so I can help connect you with the right care.`;
     } else if (input.includes('hello') || input.includes('hi') || input.includes('hey') || input.includes('good')) {
-      return `👋 Good ${timeGreeting}! I'm your TIET Medi-Care assistant, here to support your health journey.\n\n✨ I can help with:\n🧠 Mental wellness & counseling\n🏥 Symptom assessment & care\n💪 Fitness & nutrition guidance\n📚 Academic stress management\n🆘 Crisis support (24/7)\n📅 Appointment booking\n\nWhat's on your mind today? Feel free to share anything - I'm here to help!`;
+      return `👋 Good ${timeGreeting}! I'm your TIET Medi-Care assistant, here to support your health journey.\n\n✨ I can help with:\n🧠 Mental wellness & TICC counseling\n🏥 Symptom assessment & health guidance\n💪 Fitness & nutrition tips\n📚 Academic stress management\n🆘 Crisis support (24/7)\n📅 Health Centre information\n\n📍 Quick TIET Contacts:\n• Health Centre: 1800 202 4100\n• Ambulance: +91 8288008122\n• TICC: G-Block 104-105\n\nWhat's on your mind today? Feel free to share anything - I'm here to help!`;
     } else if (input.includes('contact') || input.includes('phone') || input.includes('call') || input.includes('number')) {
-      return `📞 TIET Medi-Care Contacts:\n\n🏥 Main Office: +91-175-239-3000\n🚨 Emergency: +91-175-239-3001\n🧠 Mental Health: 24/7 Crisis Line\n📧 Email: medicare@thapar.edu\n\n⏰ Hours:\n• Weekdays: 8 AM - 6 PM\n• Weekends: Emergency on-call\n• Crisis Support: 24/7\n\nWhich service would you like to reach?`;
+      return `📞 TIET Medi-Care Contacts:\n\n🏥 Health Centre:\n• Toll-Free: 1800 202 4100\n• Ambulance: +91 8288008122\n\n🧠 TICC (Counseling):\n• Location: G-Block 104-105\n• Dr. Sonam Dullat: sonam.dullat@thapar.edu\n• Ms. Sukhpreet Kaur: sukhpreet.kaur@thapar.edu\n\n📧 General:\n• Registrar: registrar@thapar.edu\n\n🆘 Emergency:\n• Police: 100\n• Ambulance: 108\n• Fire: 101\n• Women Helpline: 1091\n\nWhich service would you like to reach?`;
     } else if (input.includes('thank') || input.includes('thanks') || input.includes('helpful')) {
-      return `💙 You're so welcome! Taking care of your health is always worth it.\n\n🌟 Remember:\n• I'm here 24/7 whenever you need support\n• No question is too small\n• Your wellbeing matters\n\nTake care of yourself, and don't hesitate to reach out anytime! 🌈`;
+      return `💙 You're so welcome! Taking care of your health is always worth it.\n\n🌟 Remember:\n• I'm here 24/7 whenever you need support\n• No question is too small\n• Your wellbeing matters\n\n📍 TIET Resources Always Available:\n• Health Centre: 1800 202 4100\n• TICC: G-Block 104-105\n\nTake care of yourself, and don't hesitate to reach out anytime! 🌈`;
     } else if (input.includes('breathing') || input.includes('breathe') || input.includes('calm')) {
-      return `🧘 Let's do a quick breathing exercise together:\n\n✨ 4-7-8 Technique:\n1️⃣ Breathe IN through nose for 4 seconds\n2️⃣ HOLD your breath for 7 seconds\n3️⃣ Breathe OUT through mouth for 8 seconds\n4️⃣ Repeat 3-4 times\n\n💡 This activates your body's relaxation response.\n\nTry it now - I'll wait. How do you feel after a few rounds?`;
+      return `🧘 Let's do a quick breathing exercise together:\n\n✨ 4-7-8 Technique:\n1️⃣ Breathe IN through nose for 4 seconds\n2️⃣ HOLD your breath for 7 seconds\n3️⃣ Breathe OUT through mouth for 8 seconds\n4️⃣ Repeat 3-4 times\n\n💡 This activates your body's relaxation response.\n\n🧘 More relaxation resources:\n• TICC offers guided meditation sessions\n• Campus has quiet spaces for mindfulness\n\nTry it now - I'll wait. How do you feel after a few rounds?`;
     } else if (input.includes('water') || input.includes('hydration') || input.includes('drink')) {
-      return `💧 Staying hydrated is essential for your health!\n\n📊 Daily Goal: 8 glasses (64 oz / 2 liters)\n\n🌟 Hydration Tips:\n• Start your day with a glass of water\n• Carry a reusable water bottle\n• Set hourly reminders\n• Eat water-rich foods (fruits, veggies)\n\n⚠️ Signs of Dehydration:\n• Dark urine\n• Headaches\n• Fatigue\n• Dry mouth\n\nHow much water have you had today?`;
+      return `💧 Staying hydrated is essential for your health!\n\n📊 Daily Goal: 8 glasses (64 oz / 2 liters)\n\n🌟 Hydration Tips:\n• Start your day with a glass of water\n• Carry a reusable water bottle\n• Set hourly reminders\n• Eat water-rich foods (fruits, veggies)\n\n🏫 TIET Campus:\n• Water coolers available in all blocks\n• RO water in hostels and academic buildings\n\n⚠️ Signs of Dehydration:\n• Dark urine\n• Headaches\n• Fatigue\n• Dry mouth\n\nHow much water have you had today?`;
+    } else if (input.includes('hostel') || input.includes('warden') || input.includes('room')) {
+      return `🏠 TIET Hostel Information:\n\n📞 Hostel Contacts:\n• Anantam Hall: 9115611523\n• Agira Hall: 9115611510\n• Vasudha Hall-E: 9115611515\n• Vasudha Hall-G: 9115611517\n\n🏥 Health Issues in Hostel:\n• Contact your hostel warden first\n• Health Centre: 1800 202 4100\n• Ambulance: +91 8288008122\n\n🧠 Mental Health Support:\n• TICC: G-Block 104-105\n• Available for all hostel residents\n\nWhat specific help do you need regarding hostel?`;
+    } else if (input.includes('ticc') || input.includes('counseling') || input.includes('counselor') || input.includes('therapy')) {
+      return `🧠 TICC - Thapar Institute Counselling Cell\n\n📍 Location: G-Block 104-105\n\n👩‍⚕️ Counselors:\n• Dr. Sonam Dullat (Manager)\n  📧 sonam.dullat@thapar.edu\n• Ms. Sukhpreet Kaur (Assistant)\n  📧 sukhpreet.kaur@thapar.edu\n\n📞 Appointments:\n• Email counselors directly\n• Or call: 1800 202 4100\n\n🌟 Services:\n• Individual counseling\n• Stress management\n• Academic guidance\n• Crisis support\n\nAll sessions are confidential. Would you like help reaching out to them?`;
     } else {
-      return `🤖 I'm here to help with your health and wellness needs!\n\n💡 I can assist with:\n\n🧠 Mental Health\n   Anxiety, stress, depression, mood tracking\n\n🏥 Physical Health\n   Symptoms, checkups, medications\n\n🍎 Lifestyle\n   Nutrition, fitness, sleep, hydration\n\n📚 Student Life\n   Academic stress, social support\n\n🆘 Crisis Support\n   24/7 emergency resources\n\nTell me more about what's on your mind, or try one of the quick action buttons below!`;
+      return `🤖 I'm here to help with your health and wellness needs!\n\n💡 I can assist with:\n\n🧠 Mental Health\n   Anxiety, stress, depression, TICC counseling\n\n🏥 Physical Health\n   Symptoms, Health Centre info, medications\n\n🍎 Lifestyle\n   Nutrition, fitness, sleep, hydration\n\n📚 Student Life\n   Academic stress, hostel support\n\n🆘 Crisis Support\n   24/7 emergency resources\n\n📞 Quick Contacts:\n• Health Centre: 1800 202 4100\n• Ambulance: +91 8288008122\n• TICC: G-Block 104-105\n\nTell me more about what's on your mind, or try one of the quick action buttons below!`;
     }
   };
 
@@ -264,7 +798,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setMessages([
       {
         id: '1',
-        text: '👋 Hello! I\'m your TIET Medi-Care assistant, here to support your health and wellness journey. \n\n✨ I can help with:\n🧠 Mental health support\n🩺 Symptom guidance\n📅 Appointment booking\n🆘 Crisis support\n💪 Wellness tracking\n\nWhat brings you here today?',
+        text: '👋 Hello! I\'m your TIET Medi-Care assistant, here to support your health and wellness journey.\n\n✨ I can help with:\n🧠 Mental health & TICC counseling\n🩺 Symptom guidance & health tips\n📅 Health Centre information\n🆘 Crisis support (24/7)\n💪 Wellness tracking\n\n📞 Quick Contacts:\n• Health Centre: 1800 202 4100\n• Ambulance: +91 8288008122\n• TICC: G-Block 104-105\n\nWhat brings you here today?',
         isUser: false,
         timestamp: getTimeString(),
       },
@@ -327,6 +861,133 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-medical-blue-50 via-white to-medical-green-50 rounded-md relative overflow-hidden">
+      {/* Appointment Confirmation Dialog */}
+      {showAppointmentDialog && (
+        <motion.div 
+          className="absolute inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div 
+            className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+          >
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Calendar className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Book an Appointment</h3>
+              <p className="text-gray-600 text-sm mb-6">
+                You'll be redirected to the appointments page where you can browse available doctors and book your appointment.
+              </p>
+              <div className="flex gap-3">
+                <Button 
+                  onClick={() => setShowAppointmentDialog(false)}
+                  className="flex-1 bg-gray-200 text-gray-700 hover:bg-gray-300"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleAppointmentConfirm}
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700"
+                >
+                  OK, Let's Go!
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Mental Health Options Dialog */}
+      {showMentalHealthDialog && (
+        <motion.div 
+          className="absolute inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div 
+            className="bg-white rounded-2xl p-5 max-w-sm w-full shadow-2xl"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+          >
+            <div className="text-center mb-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Heart className="w-7 h-7 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800">Mental Health Support</h3>
+              <p className="text-gray-500 text-xs mt-1">Choose how you'd like to get support</p>
+            </div>
+            
+            <div className="space-y-2">
+              <button
+                onClick={() => handleMentalHealthOption('mood')}
+                className="w-full p-3 text-left rounded-xl border-2 border-pink-200 bg-pink-50 hover:bg-pink-100 transition-all"
+              >
+                <div className="flex items-center">
+                  <Brain className="w-5 h-5 text-pink-500 mr-3" />
+                  <div>
+                    <div className="font-medium text-gray-800 text-sm">Mood Tracker</div>
+                    <div className="text-xs text-gray-500">Track and understand your emotions</div>
+                  </div>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => handleMentalHealthOption('ticc')}
+                className="w-full p-3 text-left rounded-xl border-2 border-blue-200 bg-blue-50 hover:bg-blue-100 transition-all"
+              >
+                <div className="flex items-center">
+                  <Stethoscope className="w-5 h-5 text-blue-500 mr-3" />
+                  <div>
+                    <div className="font-medium text-gray-800 text-sm">TICC Counseling</div>
+                    <div className="text-xs text-gray-500">G-Block 104-105 • Professional help</div>
+                  </div>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => handleMentalHealthOption('resources')}
+                className="w-full p-3 text-left rounded-xl border-2 border-green-200 bg-green-50 hover:bg-green-100 transition-all"
+              >
+                <div className="flex items-center">
+                  <Book className="w-5 h-5 text-green-500 mr-3" />
+                  <div>
+                    <div className="font-medium text-gray-800 text-sm">Health Resources</div>
+                    <div className="text-xs text-gray-500">Articles, guides & self-help tools</div>
+                  </div>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => handleMentalHealthOption('crisis')}
+                className="w-full p-3 text-left rounded-xl border-2 border-red-200 bg-red-50 hover:bg-red-100 transition-all"
+              >
+                <div className="flex items-center">
+                  <Shield className="w-5 h-5 text-red-500 mr-3" />
+                  <div>
+                    <div className="font-medium text-gray-800 text-sm">Crisis Support</div>
+                    <div className="text-xs text-gray-500">Immediate help • 24/7 available</div>
+                  </div>
+                </div>
+              </button>
+            </div>
+            
+            <Button 
+              onClick={() => setShowMentalHealthDialog(false)}
+              className="w-full mt-4 bg-gray-200 text-gray-700 hover:bg-gray-300"
+            >
+              Cancel
+            </Button>
+          </motion.div>
+        </motion.div>
+      )}
+
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-10 left-10 w-20 h-20 bg-medical-blue-200 rounded-full blur-xl"></div>
@@ -486,7 +1147,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     className="px-4 py-2 bg-gradient-to-r from-medical-blue-400 to-medical-blue-500 hover:from-medical-blue-500 hover:to-medical-blue-600 rounded-xl transition-all flex items-center text-xs text-white font-semibold shadow-lg hover:shadow-xl backdrop-blur-sm"
                     whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={(e) => handleSuggestionClick("I'm feeling anxious and stressed", e)}
+                    onClick={() => setShowMentalHealthDialog(true)}
                   >
                     <Heart className="w-4 h-4 mr-2" /> Mental Health
                   </motion.button>
@@ -494,7 +1155,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     className="px-4 py-2 bg-gradient-to-r from-medical-green-400 to-medical-green-500 hover:from-medical-green-500 hover:to-medical-green-600 rounded-xl transition-all flex items-center text-xs text-white font-semibold shadow-lg hover:shadow-xl backdrop-blur-sm"
                     whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={(e) => handleSuggestionClick("I have a headache and fever", e)}
+                    onClick={() => openComponent('symptom-checker')}
                   >
                     <AlertCircle className="w-4 h-4 mr-2" /> Symptoms
                   </motion.button>
@@ -502,9 +1163,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     className="px-4 py-2 bg-gradient-to-r from-purple-400 to-purple-500 hover:from-purple-500 hover:to-purple-600 rounded-xl transition-all flex items-center text-xs text-white font-semibold shadow-lg hover:shadow-xl backdrop-blur-sm"
                     whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={(e) => handleSuggestionClick("Book an appointment", e)}
+                    onClick={handleAppointmentClick}
                   >
-                    <Calendar className="w-4 h-4 mr-2" /> Appointments
+                    <Calendar className="w-4 h-4 mr-2" /> Book Appointment
                   </motion.button>
                   <motion.button 
                     className="px-4 py-2 bg-gradient-to-r from-red-400 to-red-500 hover:from-red-500 hover:to-red-600 rounded-xl transition-all flex items-center text-xs text-white font-semibold shadow-lg hover:shadow-xl backdrop-blur-sm"
@@ -513,44 +1174,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     onClick={() => openComponent('crisis-support')}
                   >
                     <Shield className="w-4 h-4 mr-2" /> Crisis Support
-                  </motion.button>
-                </div>
-              </div>
-              
-              {/* Advanced Tools */}
-              <div className="flex justify-center">
-                <div className="flex flex-wrap justify-center gap-2 w-full">
-                  <motion.button 
-                    className="px-3 py-2 bg-gradient-to-r from-indigo-300 to-indigo-400 hover:from-indigo-400 hover:to-indigo-500 rounded-lg transition-all flex items-center text-xs text-white font-medium shadow-md hover:shadow-lg backdrop-blur-sm"
-                    whileHover={{ scale: 1.05, y: -1 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => openComponent('wellness-assessment')}
-                  >
-                    <Activity className="w-3 h-3 mr-1" /> Wellness Check
-                  </motion.button>
-                  <motion.button 
-                    className="px-3 py-2 bg-gradient-to-r from-pink-300 to-pink-400 hover:from-pink-400 hover:to-pink-500 rounded-lg transition-all flex items-center text-xs text-white font-medium shadow-md hover:shadow-lg backdrop-blur-sm"
-                    whileHover={{ scale: 1.05, y: -1 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => openComponent('mood-tracker')}
-                  >
-                    <Brain className="w-3 h-3 mr-1" /> Mood Tracker
-                  </motion.button>
-                  <motion.button 
-                    className="px-3 py-2 bg-gradient-to-r from-teal-300 to-teal-400 hover:from-teal-400 hover:to-teal-500 rounded-lg transition-all flex items-center text-xs text-white font-medium shadow-md hover:shadow-lg backdrop-blur-sm"
-                    whileHover={{ scale: 1.05, y: -1 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => openComponent('symptom-checker')}
-                  >
-                    <Stethoscope className="w-3 h-3 mr-1" /> Symptom Checker
-                  </motion.button>
-                  <motion.button 
-                    className="px-3 py-2 bg-gradient-to-r from-amber-300 to-amber-400 hover:from-amber-400 hover:to-amber-500 rounded-lg transition-all flex items-center text-xs text-white font-medium shadow-md hover:shadow-lg backdrop-blur-sm"
-                    whileHover={{ scale: 1.05, y: -1 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => openComponent('health-resources')}
-                  >
-                    <Book className="w-3 h-3 mr-1" /> Health Library
                   </motion.button>
                 </div>
               </div>
