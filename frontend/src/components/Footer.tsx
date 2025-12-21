@@ -125,13 +125,7 @@ const Footer: React.FC = () => {
           <p className="text-medical-blue-200 text-sm mb-4 md:mb-0">
             &copy; {new Date().getFullYear()} TIET Medi-Care. All rights reserved.
           </p>
-          <div className="flex space-x-6">
-            <a href="https://www.thapar.edu/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-medical-blue-200 text-sm hover:text-white transition-colors">
-              Privacy Policy
-            </a>
-            <a href="https://www.thapar.edu/terms" target="_blank" rel="noopener noreferrer" className="text-medical-blue-200 text-sm hover:text-white transition-colors">
-              Terms of Service
-            </a>
+          <div className="flex space-x-6 mb-16 md:mb-0">
             <a href="https://www.thapar.edu" target="_blank" rel="noopener noreferrer" className="text-medical-blue-200 text-sm hover:text-white transition-colors">
               TIET Website
             </a>

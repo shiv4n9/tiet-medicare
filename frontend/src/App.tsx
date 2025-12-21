@@ -18,6 +18,8 @@ import AdminRoute from "./components/auth/AdminRoute";
 import DoctorRoute from "./components/auth/DoctorRoute";
 import PatientRoute from "./components/auth/PatientRoute";
 import QuickNavigation from "./components/QuickNavigation";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 
 const queryClient = new QueryClient();
@@ -66,6 +68,10 @@ const App = () => (
                   </PatientRoute>
                 } 
               />
+              
+              {/* Legal Pages */}
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
