@@ -31,7 +31,8 @@ const AppointmentCard: React.FC = () => {
   const [contactNumber, setContactNumber] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([
-    '09:00', '10:30', '11:45', '14:00', '15:15', '16:30'
+    '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+    '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDoctorsLoading, setIsDoctorsLoading] = useState(true);
@@ -79,12 +80,32 @@ const AppointmentCard: React.FC = () => {
 
   useEffect(() => {
     if (selectedDate) {
-      const allTimeSlots = ['09:00', '10:30', '11:45', '14:00', '15:15', '16:30'];
-      const available = allTimeSlots.filter(time => isSlotAvailable(selectedDate, time));
-      setAvailableTimeSlots(available);
+      const allTimeSlots = [
+        '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+        '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'
+      ];
+      
+      // Filter out past time slots
+      const now = new Date();
+      const isToday = selectedDate.toDateString() === now.toDateString();
+      
+      const availableSlots = allTimeSlots.filter(time => {
+        // If it's today, filter out past times
+        if (isToday) {
+          const [hours, minutes] = time.split(':').map(Number);
+          const slotTime = new Date(selectedDate);
+          slotTime.setHours(hours, minutes, 0, 0);
+          if (slotTime <= now) {
+            return false;
+          }
+        }
+        return true;
+      });
+      
+      setAvailableTimeSlots(availableSlots);
 
-      if (available.length > 0 && !available.includes(selectedTime)) {
-        setSelectedTime(available[0]);
+      if (availableSlots.length > 0 && !availableSlots.includes(selectedTime)) {
+        setSelectedTime(availableSlots[0]);
       }
     }
   }, [selectedDate, selectedTime]);
@@ -135,9 +156,11 @@ const AppointmentCard: React.FC = () => {
       setActiveStep(1);
 
       toast.success('Appointment booked successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving appointment:', error);
-      toast.error('Failed to book appointment. Please try again.');
+      // Show the specific error message from the backend
+      const errorMessage = error?.message || 'Failed to book appointment. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

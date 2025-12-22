@@ -32,12 +32,25 @@ router.post("/", async (req, res, next) => {
       });
     }
     
-    // Check if slot is available
+    // Check if the appointment time has already passed
+    const appointmentDate = new Date(date);
+    const [hours, minutes] = time.split(':').map(Number);
+    appointmentDate.setHours(hours, minutes, 0, 0);
+    
+    const now = new Date();
+    if (appointmentDate < now) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Cannot book an appointment in the past. Please select a future time slot.'
+      });
+    }
+    
+    // Check if slot is available (not already booked)
     const isAvailable = await Appointment.isSlotAvailable(doctor, date, time);
     if (!isAvailable) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Time slot is not available' 
+        error: 'This time slot is already booked. Please select a different time.'
       });
     }
     
@@ -363,6 +376,77 @@ router.delete("/:id", async (req, res, next) => {
     
   } catch (error) {
     console.error('Error deleting appointment:', error);
+    next(error);
+  }
+});
+
+// PUT - Update appointment (for rescheduling)
+router.put("/:id", async (req, res, next) => {
+  try {
+    console.log('🔄 PUT /api/appointments/:id - Updating appointment');
+    console.log('Appointment ID:', req.params.id);
+    console.log('Update data:', req.body);
+    
+    const { date, time, status, notes } = req.body;
+    
+    // Validate ObjectId format
+    const mongoose = (await import('mongoose')).default;
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid appointment ID format'
+      });
+    }
+    
+    // Find the appointment
+    const appointment = await Appointment.findById(req.params.id);
+    
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        error: 'Appointment not found'
+      });
+    }
+    
+    // If rescheduling, check if new slot is available
+    if (date && time && (date !== appointment.date?.toISOString().split('T')[0] || time !== appointment.time)) {
+      const isAvailable = await Appointment.isSlotAvailable(appointment.doctor, date, time, req.params.id);
+      if (!isAvailable) {
+        return res.status(400).json({
+          success: false,
+          error: 'The selected time slot is not available'
+        });
+      }
+    }
+    
+    // Update fields
+    const updateData = {};
+    if (date) {
+      updateData.date = new Date(date);
+      updateData.appointmentDate = new Date(date);
+    }
+    if (time) {
+      updateData.time = time;
+      updateData.appointmentTime = time;
+    }
+    if (status) updateData.status = status;
+    if (notes !== undefined) updateData.notes = notes;
+    
+    const updatedAppointment = await Appointment.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+    
+    console.log('✅ Appointment updated successfully');
+    
+    res.json({
+      success: true,
+      data: updatedAppointment
+    });
+    
+  } catch (error) {
+    console.error('Error updating appointment:', error);
     next(error);
   }
 });

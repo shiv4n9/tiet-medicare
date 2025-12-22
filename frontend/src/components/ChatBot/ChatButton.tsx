@@ -50,7 +50,7 @@ const ChatButton: React.FC<ChatButtonProps> = ({ onClick }) => {
         damping: 20,
         delay: 0.5,
       }}
-      className="fixed bottom-6 right-6 z-40"
+      className="fixed bottom-6 right-4 z-[60]"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

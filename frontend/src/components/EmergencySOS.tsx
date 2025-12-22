@@ -129,7 +129,7 @@ const EmergencySOS = () => {
     <>
       {/* Floating SOS Button */}
       <motion.div
-        className="fixed bottom-24 right-6 z-40"
+        className="fixed bottom-20 right-4 z-40"
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 1.5, type: 'spring', stiffness: 260, damping: 20 }}
@@ -207,7 +207,7 @@ const EmergencySOS = () => {
 
             {/* Modal */}
             <motion.div
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 overflow-hidden"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-md max-h-[90vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col"
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -244,50 +244,50 @@ const EmergencySOS = () => {
               </div>
 
               {/* Content */}
-              <div className="p-6 space-y-4">
+              <div className="p-6 space-y-4 overflow-y-auto flex-1">
                 {!isEmergencyActive ? (
                   <>
                     <p className="text-gray-700 dark:text-gray-300">
                       This will immediately alert campus medical services and dispatch an ambulance to your location.
                     </p>
 
-                    <div className="space-y-3 bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                    <div className="space-y-3 bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
                       <button 
                         onClick={() => handleDirectCall('+918288008122')}
                         className="w-full flex items-center space-x-3 text-sm p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                       >
-                        <Phone className="w-5 h-5 text-red-600 dark:text-red-400" />
+                        <Phone className="w-4 h-4 text-red-600 dark:text-red-400" />
                         <span className="text-gray-700 dark:text-gray-300 font-medium">Ambulance: +91 8288008122</span>
                       </button>
                       <button 
                         onClick={() => handleDirectCall('18002024100')}
                         className="w-full flex items-center space-x-3 text-sm p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                       >
-                        <Phone className="w-5 h-5 text-medical-blue-600 dark:text-medical-blue-400" />
+                        <Phone className="w-4 h-4 text-medical-blue-600 dark:text-medical-blue-400" />
                         <span className="text-gray-700 dark:text-gray-300 font-medium">TIET Toll-Free: 1800 202 4100</span>
                       </button>
                       <div className="flex items-center space-x-3 text-sm p-2">
-                        <MapPin className="w-5 h-5 text-medical-green-600 dark:text-medical-green-400" />
-                        <span className="text-gray-700 dark:text-gray-300">
+                        <MapPin className="w-4 h-4 text-medical-green-600 dark:text-medical-green-400" />
+                        <span className="text-gray-700 dark:text-gray-300 text-xs">
                           {userLocation ? 'Location tracking enabled' : 'Getting location...'}
                         </span>
                       </div>
                       <div className="flex items-center space-x-3 text-sm p-2">
-                        <Clock className="w-5 h-5 text-orange-500 dark:text-orange-400" />
-                        <span className="text-gray-700 dark:text-gray-300">Average response: 3-5 minutes (on campus)</span>
+                        <Clock className="w-4 h-4 text-orange-500 dark:text-orange-400" />
+                        <span className="text-gray-700 dark:text-gray-300 text-xs">Average response: 3-5 min (on campus)</span>
                       </div>
                     </div>
 
-                    <div className="flex space-x-3">
+                    <div className="flex space-x-3 pt-2">
                       <Button
                         onClick={handleEmergency}
                         disabled={isSending}
-                        className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-6 text-lg disabled:opacity-50"
+                        className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-5 disabled:opacity-50"
                       >
                         {isSending ? (
                           <>
                             <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                            Sending SOS...
+                            Sending...
                           </>
                         ) : (
                           <>
@@ -299,14 +299,14 @@ const EmergencySOS = () => {
                       <Button
                         onClick={() => setIsOpen(false)}
                         variant="outline"
-                        className="px-6"
+                        className="px-4"
                         disabled={isSending}
                       >
                         Cancel
                       </Button>
                     </div>
                     
-                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center pb-1">
                       Tap phone numbers above to call directly
                     </p>
                   </>

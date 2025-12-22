@@ -76,8 +76,8 @@ const appointmentSchema = new mongoose.Schema({
   },
   status: { 
     type: String, 
-    enum: ['pending', 'confirmed', 'cancelled', 'completed', 'scheduled', 'no-show', 'in_progress'],
-    default: 'pending' 
+    enum: ['scheduled', 'completed', 'cancelled', 'missed'],
+    default: 'scheduled' 
   },
   startedAt: {
     type: Date,
@@ -141,13 +141,20 @@ appointmentSchema.pre('save', function(next) {
 });
 
 // Static method to check if slot is available
-appointmentSchema.statics.isSlotAvailable = async function(doctor, date, time) {
-  const existingAppointment = await this.findOne({
+appointmentSchema.statics.isSlotAvailable = async function(doctor, date, time, excludeId = null) {
+  const query = {
     doctor,
     date,
     time,
     status: { $ne: 'cancelled' }
-  });
+  };
+  
+  // Exclude current appointment when rescheduling
+  if (excludeId) {
+    query._id = { $ne: excludeId };
+  }
+  
+  const existingAppointment = await this.findOne(query);
   
   return !existingAppointment;
 };

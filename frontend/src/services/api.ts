@@ -107,6 +107,17 @@ export const appointmentService = {
     }
   },
 
+  // Patch an appointment (for status updates)
+  patchAppointment: async (id: string, appointmentData: any) => {
+    try {
+      const response = await api.patch(`/appointments/${id}`, appointmentData);
+      return response.data;
+    } catch (error) {
+      console.error(`Error patching appointment ${id}:`, error);
+      throw error;
+    }
+  },
+
   // Delete an appointment
   deleteAppointment: async (id: string) => {
     try {
