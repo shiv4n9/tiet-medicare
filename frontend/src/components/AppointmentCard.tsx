@@ -80,35 +80,51 @@ const AppointmentCard: React.FC = () => {
 
   useEffect(() => {
     if (selectedDate) {
+      // Always show all time slots - we'll mark past ones as disabled in the UI
       const allTimeSlots = [
         '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
         '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'
       ];
       
-      // Filter out past time slots
+      setAvailableTimeSlots(allTimeSlots);
+
+      // Auto-select first available (non-past) slot if current selection is past
       const now = new Date();
       const isToday = selectedDate.toDateString() === now.toDateString();
       
-      const availableSlots = allTimeSlots.filter(time => {
-        // If it's today, filter out past times
-        if (isToday) {
-          const [hours, minutes] = time.split(':').map(Number);
-          const slotTime = new Date(selectedDate);
-          slotTime.setHours(hours, minutes, 0, 0);
-          if (slotTime <= now) {
-            return false;
+      if (isToday) {
+        const [selectedHours, selectedMinutes] = selectedTime.split(':').map(Number);
+        const selectedSlotTime = new Date(selectedDate);
+        selectedSlotTime.setHours(selectedHours, selectedMinutes, 0, 0);
+        
+        if (selectedSlotTime <= now) {
+          // Find first available future slot
+          const firstAvailable = allTimeSlots.find(time => {
+            const [hours, minutes] = time.split(':').map(Number);
+            const slotTime = new Date(selectedDate);
+            slotTime.setHours(hours, minutes, 0, 0);
+            return slotTime > now;
+          });
+          if (firstAvailable) {
+            setSelectedTime(firstAvailable);
           }
         }
-        return true;
-      });
-      
-      setAvailableTimeSlots(availableSlots);
-
-      if (availableSlots.length > 0 && !availableSlots.includes(selectedTime)) {
-        setSelectedTime(availableSlots[0]);
       }
     }
   }, [selectedDate, selectedTime]);
+
+  // Helper function to check if a time slot is in the past
+  const isSlotPast = (time: string): boolean => {
+    if (!selectedDate) return false;
+    const now = new Date();
+    const isToday = selectedDate.toDateString() === now.toDateString();
+    if (!isToday) return false;
+    
+    const [hours, minutes] = time.split(':').map(Number);
+    const slotTime = new Date(selectedDate);
+    slotTime.setHours(hours, minutes, 0, 0);
+    return slotTime <= now;
+  };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     // Prevent default form submission if called from a form
@@ -381,20 +397,27 @@ const AppointmentCard: React.FC = () => {
                           {availableTimeSlots.length > 0 ? (
                             availableTimeSlots.map((time24, i) => {
                               const displayTime = formatTimeForDisplay(time24);
+                              const isPast = isSlotPast(time24);
                               return (
                                 <motion.button
                                   key={i}
                                   type="button"
-                                  className={`py-2 px-1 rounded-lg text-sm font-medium transition-colors ${time24 === selectedTime
-                                    ? 'bg-medical-blue-100 text-medical-blue-600 border-2 border-medical-blue-500 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-400'
-                                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-medical-blue-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-blue-900/40'
-                                    }`}
+                                  disabled={isPast}
+                                  className={`py-2 px-1 rounded-lg text-sm font-medium transition-colors ${
+                                    isPast
+                                      ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed line-through dark:bg-gray-800 dark:text-gray-500 dark:border-gray-700'
+                                      : time24 === selectedTime
+                                        ? 'bg-medical-blue-100 text-medical-blue-600 border-2 border-medical-blue-500 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-400'
+                                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-medical-blue-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-blue-900/40'
+                                  }`}
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    setSelectedTime(time24);
+                                    if (!isPast) {
+                                      setSelectedTime(time24);
+                                    }
                                   }}
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
+                                  whileHover={isPast ? {} : { scale: 1.05 }}
+                                  whileTap={isPast ? {} : { scale: 0.95 }}
                                 >
                                   {displayTime}
                                 </motion.button>

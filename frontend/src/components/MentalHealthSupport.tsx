@@ -19,7 +19,7 @@ const MentalHealthSupport: React.FC<MentalHealthSupportProps> = ({ toggleChat })
   
   const handleChatNow = () => {
     // Find the chatbot button in the DOM and simulate a click
-    const chatButton = document.querySelector('button[aria-label="Open AI Health Assistant"]');
+    const chatButton = document.querySelector('button[aria-label="Open Health Assistant"]');
     if (chatButton) {
       (chatButton as HTMLButtonElement).click();
     }
